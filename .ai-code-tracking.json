@@ -1,0 +1,319 @@
+{
+  "version": "1.0",
+  "records": [
+    {
+      "filePath": "/Users/sunze/git/intelligent-diagnosis/data-plane/data-boot/src/main/java/com/company/intelligentdiagnosis/agent/boot/DataPlaneApplication.java",
+      "timestamp": 1784289471658,
+      "startOffset": 346,
+      "endOffset": 600,
+      "codeContent": "import org.springframework.data.jpa.repository.config.EnableJpaRepositories;\n\n@SpringBootApplication(scanBasePackages \u003d \"com.company.intelligentdiagnosis.agent\")\n@EnableJpaRepositories(basePackages \u003d \"com.company.intelligentdiagnosis.agent.infrastructure",
+      "aiProbability": 95,
+      "aiTool": "AI Assistant",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 4
+    },
+    {
+      "filePath": "/Users/sunze/git/intelligent-diagnosis/frontend/src/router/index.ts",
+      "timestamp": 1784290066835,
+      "startOffset": 229,
+      "endOffset": 539,
+      "codeContent": "RepositoriesView from \u0027@/views/RepositoriesView.vue\u0027\nimport AdminView from \u0027@/views/AdminView.vue\u0027\n\nconst router \u003d createRouter({\n  history: createWebHistory(),\n  routes: [\n    { path: \u0027/\u0027, name: \u0027diagnosis\u0027, component: DiagnosisView },\n    { path: \u0027/repositories\u0027, name: \u0027repositories\u0027, component: Repositorie",
+      "aiProbability": 95,
+      "aiTool": "AI Assistant",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 8
+    },
+    {
+      "filePath": "/Users/sunze/git/intelligent-diagnosis/data-plane/data-infrastructure/src/main/java/com/company/intelligentdiagnosis/agent/infrastructure/repository/provider/GitRepositoryProvider.java",
+      "timestamp": 1784290251959,
+      "startOffset": 5478,
+      "endOffset": 5677,
+      "codeContent": "ObjectId head \u003d git.getRepository().resolve(\"HEAD\");\n            log.info(\"Successfully cloned repository {} at commit {}\",\n                config.getName(), head !\u003d null ? head.getName() : \"unknown\"",
+      "aiProbability": 90,
+      "aiTool": "AI Assistant",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 3
+    },
+    {
+      "filePath": "/Users/sunze/git/intelligent-diagnosis/data-plane/data-boot/src/main/java/com/company/intelligentdiagnosis/agent/boot/DataPlaneApplication.java",
+      "timestamp": 1784290462242,
+      "startOffset": 373,
+      "endOffset": 666,
+      "codeContent": "boot.orm.jpa.EntityScan;\nimport org.springframework.data.jpa.repository.config.EnableJpaRepositories;\n\n@SpringBootApplication(scanBasePackages \u003d \"com.company.intelligentdiagnosis.agent\")\n@EnableJpaRepositories(basePackages \u003d \"com.company.intelligentdiagnosis.agent.infrastructure\")\n@EntityScan",
+      "aiProbability": 95,
+      "aiTool": "AI Assistant",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 6
+    },
+    {
+      "filePath": "/Users/sunze/git/intelligent-diagnosis/data-plane/data-infrastructure/src/main/java/com/company/intelligentdiagnosis/agent/infrastructure/repository/sync/GitSyncService.java",
+      "timestamp": 1784290907739,
+      "startOffset": 2051,
+      "endOffset": 2094,
+      "codeContent": "tate.setCreatedAt(Instant.now());\n        s",
+      "aiProbability": 90,
+      "aiTool": "AI Assistant",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 2
+    },
+    {
+      "filePath": "/Users/sunze/git/intelligent-diagnosis/data-plane/data-infrastructure/src/main/java/com/company/intelligentdiagnosis/agent/infrastructure/repository/provider/GitRepositoryProvider.java",
+      "timestamp": 1784292205620,
+      "startOffset": 163,
+      "endOffset": 1258,
+      "codeContent": "AuthType;\nimport com.company.intelligentdiagnosis.agent.infrastructure.repository.config.RepositoryConfigEntity;\nimport com.company.intelligentdiagnosis.agent.infrastructure.repository.config.RepositoryType;\nimport com.jcraft.jsch.JSch;\nimport com.jcraft.jsch.JSchException;\nimport com.jcraft.jsch.Session;\nimport org.eclipse.jgit.api.Git;\nimport org.eclipse.jgit.api.ListBranchCommand;\nimport org.eclipse.jgit.api.TransportCommand;\nimport org.eclipse.jgit.api.errors.GitAPIException;\nimport org.eclipse.jgit.lib.ObjectId;\nimport org.eclipse.jgit.lib.Ref;\nimport org.eclipse.jgit.lib.Repository;\nimport org.eclipse.jgit.revwalk.RevCommit;\nimport org.eclipse.jgit.revwalk.RevWalk;\nimport org.eclipse.jgit.storage.file.FileRepositoryBuilder;\nimport org.eclipse.jgit.transport.CredentialsProvider;\nimport org.eclipse.jgit.transport.JschConfigSessionFactory;\nimport org.eclipse.jgit.transport.OpenSshConfig;\nimport org.eclipse.jgit.transport.SshSessionFactory;\nimport org.eclipse.jgit.transport.SshTransport;\nimport org.eclipse.jgit.transport.TransportConfigCallback;\nimport org.eclipse.jgit.util.FS",
+      "aiProbability": 95,
+      "aiTool": "AI Assistant",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 23
+    },
+    {
+      "filePath": "/Users/sunze/git/intelligent-diagnosis/data-plane/data-infrastructure/src/main/java/com/company/intelligentdiagnosis/agent/infrastructure/repository/provider/GitRepositoryProvider.java",
+      "timestamp": 1784292250662,
+      "startOffset": 6858,
+      "endOffset": 8684,
+      "codeContent": "void configureAuthentication(TransportCommand\u003c?, ?\u003e command,\n                                         RepositoryConfigEntity config,\n                                         CredentialsProvider credentials) {\n        if (config.getAuthType() \u003d\u003d AuthType.SSH_KEY) {\n            command.setTransportConfigCallback(createSshTransportConfigCallback(config));\n        } else if (credentials !\u003d null) {\n            command.setCredentialsProvider(credentials);\n        }\n    }\n\n    private TransportConfigCallback createSshTransportConfigCallback(RepositoryConfigEntity config) {\n        String keyPath \u003d config.getAuthSshKeyPath();\n        if (keyPath \u003d\u003d null || keyPath.isBlank()) {\n            throw new RepositorySyncException(\n                \"SSH key path is required for SSH authentication: \" + config.getName()\n            );\n        }\n\n        Path resolvedKeyPath \u003d Path.of(keyPath);\n        if (!Files.exists(resolvedKeyPath)) {\n            throw new RepositorySyncException(\n                \"SSH key file not found: \" + resolvedKeyPath\n            );\n        }\n\n        SshSessionFactory factory \u003d new JschConfigSessionFactory() {\n            @Override\n            protected void configure(OpenSshConfig.Host host, Session session) {\n                // Rely on default JSch host key verification (~/.ssh/known_hosts).\n            }\n\n            @Override\n            protected JSch createDefaultJSch(FS fs) throws JSchException {\n                JSch jsch \u003d super.createDefaultJSch(fs);\n                jsch.addIdentity(resolvedKeyPath.toAbsolutePath().toString());\n                return jsch;\n            }\n        };\n\n        return transport -\u003e {\n            if (transport instanceof SshTransport sshTransport) {\n                sshTransport.setSshSessionFactory(factory);\n            }\n        };\n    }\n\n    private ",
+      "aiProbability": 70,
+      "aiTool": "AI Assistant",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 47
+    },
+    {
+      "filePath": "/Users/sunze/git/intelligent-diagnosis/data-plane/data-infrastructure/src/main/java/com/company/intelligentdiagnosis/agent/infrastructure/repository/provider/GitRepositoryProvider.java",
+      "timestamp": 1784293422547,
+      "startOffset": 5715,
+      "endOffset": 6907,
+      "codeContent": "SshSessionFactory sshFactory \u003d configureAuthentication(cloneCommand, config, credentials);\n        try (Git git \u003d cloneCommand.call()) {\n            try {\n                ObjectId head \u003d git.getRepository().resolve(\"HEAD\");\n                log.info(\"Successfully cloned repository {} at commit {}\",\n                    config.getName(), head !\u003d null ? head.getName() : \"unknown\");\n            } catch (Exception e) {\n                log.warn(\"Failed to resolve HEAD after cloning repository {}\", config.getName(), e);\n            }\n        } finally {\n            closeQuietly(sshFactory);\n        }\n    }\n\n    private void pullRepository(RepositoryConfigEntity config, Path localPath, CredentialsProvider credentials)\n        throws GitAPIException, IOException {\n        try (Git git \u003d Git.open(localPath.toFile())) {\n            var pullCommand \u003d git.pull()\n                .setRemote(\"origin\")\n                .setRemoteBranchName(config.getBranch());\n\n            SshSessionFactory sshFactory \u003d configureAuthentication(pullCommand, config, credentials);\n            try {\n                pullCommand.call();\n            } finally {\n                closeQuietly(sshFactory);\n            }",
+      "aiProbability": 95,
+      "aiTool": "AI Assistant",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 27
+    },
+    {
+      "filePath": "/Users/sunze/git/intelligent-diagnosis/data-plane/data-boot/src/main/java/com/company/intelligentdiagnosis/agent/boot/DataPlaneApplication.java",
+      "timestamp": 1784299089883,
+      "startOffset": 176,
+      "endOffset": 432,
+      "codeContent": "autoconfigure.SpringBootApplication;\nimport org.springframework.boot.autoconfigure.domain.EntityScan;\nimport org.springframework.boot.context.properties.EnableConfigurationProperties;\nimport org.springframework.data.jpa.repository.config.EnableJpaRepositor",
+      "aiProbability": 90,
+      "aiTool": "AI Assistant",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 4
+    },
+    {
+      "filePath": "/Users/sunze/git/intelligent-diagnosis/data-plane/data-infrastructure/src/main/java/com/company/intelligentdiagnosis/agent/infrastructure/repository/sync/RepositorySyncScheduler.java",
+      "timestamp": 1784299381572,
+      "startOffset": 543,
+      "endOffset": 809,
+      "codeContent": "import java.util.concurrent.atomic.AtomicBoolean;\n\n@Component\npublic class RepositorySyncScheduler {\n\n    private static final Logger log \u003d LoggerFactory.getLogger(RepositorySyncScheduler.class);\n\n    private final AtomicBoolean syncRunning \u003d new AtomicBoolean(false",
+      "aiProbability": 95,
+      "aiTool": "AI Assistant",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 8
+    },
+    {
+      "filePath": "/Users/sunze/git/intelligent-diagnosis/data-plane/data-infrastructure/src/main/java/com/company/intelligentdiagnosis/agent/infrastructure/repository/provider/GitRepositoryProvider.java",
+      "timestamp": 1784299411139,
+      "startOffset": 1056,
+      "endOffset": 1634,
+      "codeContent": "beans.factory.annotation.Value;\nimport org.springframework.stereotype.Component;\n\nimport java.io.Closeable;\nimport java.io.File;\nimport java.io.IOException;\nimport java.nio.file.Files;\nimport java.nio.file.Path;\nimport java.util.ArrayList;\nimport java.util.List;\n\n@Component\npublic class GitRepositoryProvider implements RepositoryProvider {\n\n    private static final Logger log \u003d LoggerFactory.getLogger(GitRepositoryProvider.class);\n\n    private final GitCredentialFactory credentialFactory;\n\n    @Value(\"${repository.sync.timeout-seconds:600}\")\n    private int timeoutSeconds",
+      "aiProbability": 95,
+      "aiTool": "AI Assistant",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 20
+    },
+    {
+      "filePath": "/Users/sunze/git/intelligent-diagnosis/data-plane/data-infrastructure/src/main/java/com/company/intelligentdiagnosis/agent/infrastructure/repository/sync/GitSyncService.java",
+      "timestamp": 1784299468572,
+      "startOffset": 933,
+      "endOffset": 4352,
+      "codeContent": "PlatformTransactionManager;\nimport org.springframework.transaction.support.TransactionTemplate;\n\nimport java.time.Instant;\nimport java.util.UUID;\n\n@Service\npublic class GitSyncService {\n\n    private static final Logger log \u003d LoggerFactory.getLogger(GitSyncService.class);\n\n    private final RepositoryProviderRegistry providerRegistry;\n    private final RepositorySyncStateRepository syncStateRepository;\n    private final TransactionTemplate transactionTemplate;\n\n    public GitSyncService(RepositoryProviderRegistry providerRegistry,\n                          RepositorySyncStateRepository syncStateRepository,\n                          PlatformTransactionManager transactionManager) {\n        this.providerRegistry \u003d providerRegistry;\n        this.syncStateRepository \u003d syncStateRepository;\n        this.transactionTemplate \u003d new TransactionTemplate(transactionManager);\n    }\n\n    public RepositorySyncStateEntity sync(RepositoryConfigEntity config, TriggerType triggerType, String triggeredBy) {\n        String stateId \u003d transactionTemplate.execute(status -\u003e createState(config, triggerType, triggeredBy));\n\n        try {\n            log.info(\"Starting sync for repository {} (trigger: {})\", config.getName(), triggerType);\n            var provider \u003d providerRegistry.getProvider(config.getType());\n            RepositorySyncResult result \u003d provider.sync(config);\n\n            log.info(\"Successfully synced repository {} to commit {} ({} changed files)\",\n                config.getName(), result.latestCommit(), result.changedFiles().size());\n\n            return transactionTemplate.execute(status -\u003e markSuccess(stateId, result));\n        } catch (Exception e) {\n            log.error(\"Failed to sync repository {}\", config.getName(), e);\n            return transactionTemplate.execute(status -\u003e markFailed(stateId, e));\n        }\n    }\n\n    private String createState(RepositoryConfigEntity config, TriggerType triggerType, String triggeredBy) {\n        String stateId \u003d UUID.randomUUID().toString();\n        RepositorySyncStateEntity state \u003d new RepositorySyncStateEntity();\n        state.setId(stateId);\n        state.setRepository(config);\n        state.setStatus(SyncStatus.SYNCING);\n        state.setTriggerType(triggerType);\n        state.setTriggeredBy(triggeredBy);\n        state.setStartedAt(Instant.now());\n        state.setCreatedAt(Instant.now());\n        syncStateRepository.save(state);\n        return stateId;\n    }\n\n    private RepositorySyncStateEntity markSuccess(String stateId, RepositorySyncResult result) {\n        RepositorySyncStateEntity state \u003d syncStateRepository.findById(stateId)\n            .orElseThrow(() -\u003e new IllegalStateException(\"Sync state not found: \" + stateId));\n        state.setStatus(SyncStatus.SUCCESS);\n        state.setLatestCommit(result.latestCommit());\n        state.setPreviousCommit(result.previousCommit());\n        state.setChangedFiles(result.changedFiles().size());\n        state.setCompletedAt(Instant.now());\n        return syncStateRepository.save(state);\n    }\n\n    private RepositorySyncStateEntity markFailed(String stateId, Exception e) {\n        RepositorySyncStateEntity state \u003d syncStateRepository.findById(stateId)\n            .orElseThrow(() -\u003e new IllegalStateException(\"Sync state not found: \" + stateId));\n        state.setStatus(SyncStatus.FAILED);\n        state.setErrorMessage(e.getMessage());\n        state.setCompletedAt(Instant.now());",
+      "aiProbability": 95,
+      "aiTool": "AI Assistant",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 72
+    },
+    {
+      "filePath": "/Users/sunze/git/intelligent-diagnosis/data-plane/data-infrastructure/src/main/java/com/company/intelligentdiagnosis/agent/infrastructure/repository/provider/GitRepositoryProvider.java",
+      "timestamp": 1784301123577,
+      "startOffset": 5462,
+      "endOffset": 6589,
+      "codeContent": " {\n        boolean directoryExisted \u003d Files.exists(localPath);\n        var cloneCommand \u003d Git.cloneRepository()\n            .setURI(config.getUrl())\n            .setDirectory(localPath.toFile())\n            .setBranch(config.getBranch())\n            .setCloneAllBranches(false)\n            .setCloneSubmodules(false)\n            .setTimeout(timeoutSeconds);\n\n        SshSessionFactory sshFactory \u003d configureAuthentication(cloneCommand, config, credentials);\n        try (Git git \u003d cloneCommand.call()) {\n            try {\n                ObjectId head \u003d git.getRepository().resolve(\"HEAD\");\n                log.info(\"Successfully cloned repository {} at commit {}\",\n                    config.getName(), head !\u003d null ? head.getName() : \"unknown\");\n            } catch (Exception e) {\n                log.warn(\"Failed to resolve HEAD after cloning repository {}\", config.getName(), e);\n            }\n        } catch (Exception e) {\n            if (!directoryExisted) {\n                deleteRecursively(localPath);\n            }\n            throw new RepositorySyncException(\"Failed to clone repository: \" + config.getName(), e)",
+      "aiProbability": 90,
+      "aiTool": "AI Assistant",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 24
+    },
+    {
+      "filePath": "/Users/sunze/git/intelligent-diagnosis/data-plane/data-infrastructure/src/main/java/com/company/intelligentdiagnosis/agent/infrastructure/repository/crypto/EncryptedStringConverter.java",
+      "timestamp": 1784302104318,
+      "startOffset": 1673,
+      "endOffset": 2031,
+      "codeContent": "try {\n            return decrypt(dbData);\n        } catch (IllegalArgumentException e) {\n            // Value is not base64-encoded, likely stored as plaintext (e.g. direct DB update).\n            return dbData;\n        } catch (Exception e) {\n            log.warn(\"Failed to decrypt repository secret, returning null\", e);\n            return null;\n        }",
+      "aiProbability": 95,
+      "aiTool": "AI Assistant",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 9
+    },
+    {
+      "filePath": "/Users/sunze/git/intelligent-diagnosis/data-plane/data-infrastructure/src/main/java/com/company/intelligentdiagnosis/agent/infrastructure/graph/GraphStoreClient.java",
+      "timestamp": 1784302912266,
+      "startOffset": 143,
+      "endOffset": 4402,
+      "codeContent": "com.company.intelligentdiagnosis.agent.domain.Relation;\nimport org.neo4j.driver.Driver;\nimport org.neo4j.driver.Session;\nimport org.neo4j.driver.Values;\nimport org.slf4j.Logger;\nimport org.slf4j.LoggerFactory;\nimport org.springframework.stereotype.Component;\n\nimport java.util.List;\nimport java.util.Map;\nimport java.util.stream.Collectors;\n\n@Component\npublic class GraphStoreClient {\n\n    private static final Logger log \u003d LoggerFactory.getLogger(GraphStoreClient.class);\n\n    private final Driver driver;\n\n    public GraphStoreClient(Driver driver) {\n        this.driver \u003d driver;\n    }\n\n    public void buildGraph(String repository, String commitHash, List\u003cCodeElement\u003e elements) {\n        if (elements.isEmpty()) {\n            return;\n        }\n\n        List\u003cMap\u003cString, Object\u003e\u003e nodeParams \u003d elements.stream()\n            .map(element -\u003e toNodeParameters(repository, commitHash, element))\n            .toList();\n\n        List\u003cMap\u003cString, Object\u003e\u003e relationParams \u003d elements.stream()\n            .flatMap(element -\u003e element.relations().stream()\n                .map(relation -\u003e toRelationParameters(element.id(), relation)))\n            .toList();\n\n        try (Session session \u003d driver.session()) {\n            session.executeWriteWithoutResult(tx -\u003e {\n                tx.run(\"\"\"\n                    UNWIND $nodes AS node\n                    MERGE (e:CodeElement {id: node.id})\n                    SET e.repository \u003d node.repository,\n                        e.commitHash \u003d node.commitHash,\n                        e.kind \u003d node.kind,\n                        e.name \u003d node.name,\n                        e.qualifiedName \u003d node.qualifiedName,\n                        e.filePath \u003d node.filePath,\n                        e.startLine \u003d node.startLine,\n                        e.endLine \u003d node.endLine,\n                        e.sourceCode \u003d node.sourceCode,\n                        e.documentation \u003d node.documentation,\n                        e.modifiers \u003d node.modifiers\n                    \"\"\", Values.parameters(\"nodes\", nodeParams));\n\n                if (!relationParams.isEmpty()) {\n                    tx.run(\"\"\"\n                        UNWIND $relations AS rel\n                        MATCH (source:CodeElement {id: rel.sourceId})\n                        MATCH (target:CodeElement {id: rel.targetId})\n                        MERGE (source)-[r:CALLS]-\u003e(target)\n                        SET r.kind \u003d rel.kind\n                        \"\"\", Values.parameters(\"relations\", relationParams));\n                }\n            });\n        }\n\n        log.info(\"Built Neo4j graph for repository {} ({} elements, {} relations)\",\n            repository, elements.size(), relationParams.size());\n    }\n\n    public void deleteByRepository(String repository) {\n        try (Session session \u003d driver.session()) {\n            session.executeWriteWithoutResult(tx -\u003e tx.run(\"\"\"\n                MATCH (e:CodeElement {repository: $repository})\n                OPTIONAL MATCH (e)-[r]-()\n                DELETE r, e\n                \"\"\", Values.parameters(\"repository\", repository)));\n        }\n        log.info(\"Deleted Neo4j graph for repository {}\", repository);\n    }\n\n    private Map\u003cString, Object\u003e toNodeParameters(String repository, String commitHash, CodeElement element) {\n        return Map.of(\n            \"id\", element.id(),\n            \"repository\", repository,\n            \"commitHash\", commitHash,\n            \"kind\", element.kind().name(),\n            \"name\", element.name(),\n            \"qualifiedName\", nullToEmpty(element.qualifiedName()),\n            \"filePath\", nullToEmpty(element.filePath()),\n            \"startLine\", element.startLine(),\n            \"endLine\", element.endLine(),\n            \"sourceCode\", nullToEmpty(element.sourceCode()),\n            \"documentation\", nullToEmpty(element.documentation()),\n            \"modifiers\", element.modifiers() !\u003d null ? element.modifiers() : List.of()\n        );\n    }\n\n    private Map\u003cString, Object\u003e toRelationParameters(String sourceId, Relation relation) {\n        return Map.of(\n            \"sourceId\", sourceId,\n            \"targetId\", relation.targetId(),\n            \"kind\", relation.kind().name()\n        );\n    }\n\n    private String nullToEmpty(String value) {\n        return value !\u003d null ? value : \"\";",
+      "aiProbability": 95,
+      "aiTool": "AI Assistant",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 109
+    },
+    {
+      "filePath": "/Users/sunze/git/intelligent-diagnosis/data-plane/data-infrastructure/src/main/java/com/company/intelligentdiagnosis/agent/infrastructure/vector/VectorStoreClient.java",
+      "timestamp": 1784303064351,
+      "startOffset": 144,
+      "endOffset": 5845,
+      "codeContent": "io.qdrant.client.QdrantClient;\nimport io.qdrant.client.grpc.Collections;\nimport io.qdrant.client.grpc.Points;\nimport org.slf4j.Logger;\nimport org.slf4j.LoggerFactory;\nimport org.springframework.stereotype.Component;\n\nimport java.util.List;\nimport java.util.Map;\nimport java.util.concurrent.ExecutionException;\nimport java.util.stream.Collectors;\n\nimport static io.qdrant.client.PointIdFactory.id;\nimport static io.qdrant.client.ValueFactory.value;\nimport static io.qdrant.client.VectorsFactory.vectors;\n\n@Component\npublic class VectorStoreClient {\n\n    private static final Logger log \u003d LoggerFactory.getLogger(VectorStoreClient.class);\n\n    private final QdrantClient client;\n    private final EmbeddingGenerator embeddingGenerator;\n    private final QdrantProperties properties;\n\n    public VectorStoreClient(QdrantClient client,\n                             EmbeddingGenerator embeddingGenerator,\n                             QdrantProperties properties) {\n        this.client \u003d client;\n        this.embeddingGenerator \u003d embeddingGenerator;\n        this.properties \u003d properties;\n    }\n\n    public void upsert(String repository, List\u003cCodeElement\u003e elements) {\n        if (elements.isEmpty()) {\n            return;\n        }\n\n        ensureCollection();\n\n        List\u003cPoints.PointStruct\u003e points \u003d elements.stream()\n            .map(element -\u003e toPointStruct(repository, element))\n            .toList();\n\n        try {\n            client.upsertAsync(properties.getCollectionName(), points).get();\n            log.info(\"Upserted {} vectors to Qdrant collection {} for repository {}\",\n                points.size(), properties.getCollectionName(), repository);\n        } catch (InterruptedException e) {\n            Thread.currentThread().interrupt();\n            throw new VectorStoreException(\"Interrupted while upserting vectors for repository: \" + repository, e);\n        } catch (ExecutionException e) {\n            throw new VectorStoreException(\"Failed to upsert vectors for repository: \" + repository, e.getCause());\n        }\n    }\n\n    public void deleteByRepository(String repository) {\n        ensureCollection();\n\n        try {\n            client.deleteAsync(\n                properties.getCollectionName(),\n                Points.PointIdsList.newBuilder()\n                    .addAllPoints(List.of())\n                    .build()\n            ).get();\n            log.info(\"Deleted vectors for repository {} from Qdrant collection {}\",\n                repository, properties.getCollectionName());\n        } catch (InterruptedException e) {\n            Thread.currentThread().interrupt();\n            throw new VectorStoreException(\"Interrupted while deleting vectors for repository: \" + repository, e);\n        } catch (ExecutionException e) {\n            throw new VectorStoreException(\"Failed to delete vectors for repository: \" + repository, e.getCause());\n        }\n    }\n\n    private void ensureCollection() {\n        if (!properties.isCreateCollectionIfMissing()) {\n            return;\n        }\n\n        try {\n            boolean exists \u003d client.collectionExistsAsync(properties.getCollectionName()).get();\n            if (exists) {\n                return;\n            }\n            client.createCollectionAsync(\n                properties.getCollectionName(),\n                Collections.VectorParams.newBuilder()\n                    .setSize(embeddingGenerator.dimension())\n                    .setDistance(Collections.Distance.Cosine)\n                    .build()\n            ).get();\n            log.info(\"Created Qdrant collection {} with dimension {}\",\n                properties.getCollectionName(), embeddingGenerator.dimension());\n        } catch (InterruptedException e) {\n            Thread.currentThread().interrupt();\n            throw new VectorStoreException(\"Interrupted while creating Qdrant collection\", e);\n        } catch (ExecutionException e) {\n            throw new VectorStoreException(\"Failed to create Qdrant collection\", e.getCause());\n        }\n    }\n\n    private Points.PointStruct toPointStruct(String repository, CodeElement element) {\n        String text \u003d buildEmbeddingText(element);\n        float[] vector \u003d embeddingGenerator.embed(text);\n\n        return Points.PointStruct.newBuilder()\n            .setId(id(element.id()))\n            .setVectors(vectors(vector))\n            .putAllPayload(Map.of(\n                \"repository\", value(repository),\n                \"kind\", value(element.kind().name()),\n                \"name\", value(element.name()),\n                \"qualifiedName\", value(nullToEmpty(element.qualifiedName())),\n                \"filePath\", value(nullToEmpty(element.filePath())),\n                \"startLine\", value(element.startLine()),\n                \"endLine\", value(element.endLine()),\n                \"sourceCode\", value(nullToEmpty(element.sourceCode())),\n                \"documentation\", value(nullToEmpty(element.documentation())),\n                \"text\", value(text)\n            ))\n            .build();\n    }\n\n    private String buildEmbeddingText(CodeElement element) {\n        StringBuilder builder \u003d new StringBuilder();\n        if (element.qualifiedName() !\u003d null \u0026\u0026 !element.qualifiedName().isBlank()) {\n            builder.append(element.qualifiedName()).append(\"\\n\");\n        }\n        if (element.documentation() !\u003d null \u0026\u0026 !element.documentation().isBlank()) {\n            builder.append(element.documentation()).append(\"\\n\");\n        }\n        if (element.sourceCode() !\u003d null \u0026\u0026 !element.sourceCode().isBlank()) {\n            builder.append(element.sourceCode());\n        }\n        return builder.toString().trim();\n    }\n\n    private String nullToEmpty(String value) {\n        return value !\u003d null ? value : \"\";",
+      "aiProbability": 95,
+      "aiTool": "AI Assistant",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 141
+    },
+    {
+      "filePath": "/Users/sunze/git/intelligent-diagnosis/data-plane/data-infrastructure/src/main/java/com/company/intelligentdiagnosis/agent/infrastructure/vector/VectorStoreClient.java",
+      "timestamp": 1784335985971,
+      "startOffset": 373,
+      "endOffset": 5403,
+      "codeContent": "nio.charset.StandardCharsets;\nimport java.util.List;\nimport java.util.Map;\nimport java.util.UUID;\nimport java.util.concurrent.ExecutionException;\n\nimport static io.qdrant.client.ConditionFactory.matchKeyword;\nimport static io.qdrant.client.PointIdFactory.id;\nimport static io.qdrant.client.ValueFactory.value;\nimport static io.qdrant.client.VectorsFactory.vectors;\n\n@Component\npublic class VectorStoreClient {\n\n    private static final Logger log \u003d LoggerFactory.getLogger(VectorStoreClient.class);\n\n    private final QdrantClient client;\n    private final EmbeddingGenerator embeddingGenerator;\n    private final QdrantProperties properties;\n\n    public VectorStoreClient(QdrantClient client,\n                             EmbeddingGenerator embeddingGenerator,\n                             QdrantProperties properties) {\n        this.client \u003d client;\n        this.embeddingGenerator \u003d embeddingGenerator;\n        this.properties \u003d properties;\n    }\n\n    public void upsert(String repository, List\u003cCodeElement\u003e elements) {\n        if (elements.isEmpty()) {\n            return;\n        }\n\n        ensureCollection();\n\n        List\u003cPoints.PointStruct\u003e points \u003d elements.stream()\n            .map(element -\u003e toPointStruct(repository, element))\n            .toList();\n\n        try {\n            client.upsertAsync(properties.getCollectionName(), points).get();\n            log.info(\"Upserted {} vectors to Qdrant collection {} for repository {}\",\n                points.size(), properties.getCollectionName(), repository);\n        } catch (InterruptedException e) {\n            Thread.currentThread().interrupt();\n            throw new VectorStoreException(\"Interrupted while upserting vectors for repository: \" + repository, e);\n        } catch (ExecutionException e) {\n            throw new VectorStoreException(\"Failed to upsert vectors for repository: \" + repository, e.getCause());\n        }\n    }\n\n    public void deleteByRepository(String repository) {\n        ensureCollection();\n\n        io.qdrant.client.grpc.Points.Filter filter \u003d io.qdrant.client.grpc.Points.Filter.newBuilder()\n            .addMust(matchKeyword(\"repository\", repository))\n            .build();\n\n        try {\n            client.deleteAsync(properties.getCollectionName(), filter).get();\n            log.info(\"Deleted vectors for repository {} from Qdrant collection {}\",\n                repository, properties.getCollectionName());\n        } catch (InterruptedException e) {\n            Thread.currentThread().interrupt();\n            throw new VectorStoreException(\"Interrupted while deleting vectors for repository: \" + repository, e);\n        } catch (ExecutionException e) {\n            throw new VectorStoreException(\"Failed to delete vectors for repository: \" + repository, e.getCause());\n        }\n    }\n\n    private void ensureCollection() {\n        if (!properties.isCreateCollectionIfMissing()) {\n            return;\n        }\n\n        try {\n            boolean exists \u003d client.collectionExistsAsync(properties.getCollectionName()).get();\n            if (exists) {\n                return;\n            }\n            client.createCollectionAsync(\n                properties.getCollectionName(),\n                Collections.VectorParams.newBuilder()\n                    .setSize(embeddingGenerator.dimension())\n                    .setDistance(Collections.Distance.Cosine)\n                    .build()\n            ).get();\n            log.info(\"Created Qdrant collection {} with dimension {}\",\n                properties.getCollectionName(), embeddingGenerator.dimension());\n        } catch (InterruptedException e) {\n            Thread.currentThread().interrupt();\n            throw new VectorStoreException(\"Interrupted while creating Qdrant collection\", e);\n        } catch (ExecutionException e) {\n            throw new VectorStoreException(\"Failed to create Qdrant collection\", e.getCause());\n        }\n    }\n\n    private Points.PointStruct toPointStruct(String repository, CodeElement element) {\n        String text \u003d buildEmbeddingText(element);\n        float[] vector \u003d embeddingGenerator.embed(text);\n\n        return Points.PointStruct.newBuilder()\n            .setId(id(pointIdFor(element.id())))\n            .setVectors(vectors(vector))\n            .putAllPayload(Map.of(\n                \"repository\", value(repository),\n                \"kind\", value(element.kind().name()),\n                \"name\", value(element.name()),\n                \"qualifiedName\", value(nullToEmpty(element.qualifiedName())),\n                \"filePath\", value(nullToEmpty(element.filePath())),\n                \"startLine\", value(element.startLine()),\n                \"endLine\", value(element.endLine()),\n                \"sourceCode\", value(nullToEmpty(element.sourceCode())),\n                \"documentation\", value(nullToEmpty(element.documentation())),\n                \"text\", value(text)\n            ))\n            .build();\n    }\n\n    private UUID pointIdFor(String elementId) {\n        return UUID.nameUUIDFromBytes(elementId.getBytes(StandardCharsets.UTF_8)",
+      "aiProbability": 95,
+      "aiTool": "AI Assistant",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 121
+    },
+    {
+      "filePath": "/Users/sunze/git/intelligent-diagnosis/data-plane/data-infrastructure/src/main/java/com/company/intelligentdiagnosis/agent/infrastructure/graph/GraphStoreClient.java",
+      "timestamp": 1784335985972,
+      "startOffset": 3394,
+      "endOffset": 4147,
+      "codeContent": "Entries(\n            Map.entry(\"id\", element.id()),\n            Map.entry(\"repository\", repository),\n            Map.entry(\"commitHash\", commitHash),\n            Map.entry(\"kind\", element.kind().name()),\n            Map.entry(\"name\", element.name()),\n            Map.entry(\"qualifiedName\", nullToEmpty(element.qualifiedName())),\n            Map.entry(\"filePath\", nullToEmpty(element.filePath())),\n            Map.entry(\"startLine\", element.startLine()),\n            Map.entry(\"endLine\", element.endLine()),\n            Map.entry(\"sourceCode\", nullToEmpty(element.sourceCode())),\n            Map.entry(\"documentation\", nullToEmpty(element.documentation())),\n            Map.entry(\"modifiers\", element.modifiers() !\u003d null ? element.modifiers() : List.of()",
+      "aiProbability": 95,
+      "aiTool": "AI Assistant",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 13
+    },
+    {
+      "filePath": "/Users/sunze/git/intelligent-diagnosis/data-plane/data-infrastructure/src/main/java/com/company/intelligentdiagnosis/agent/infrastructure/parse/ParseWorkerClient.java",
+      "timestamp": 1784729503973,
+      "startOffset": 2360,
+      "endOffset": 2414,
+      "codeContent": "maxInboundMessageSize(100 * 1024 * 1024)\n            .",
+      "aiProbability": 90,
+      "aiTool": "AI Assistant",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 2
+    },
+    {
+      "filePath": "/Users/sunze/git/intelligent-diagnosis/data-plane/data-infrastructure/src/main/java/com/company/intelligentdiagnosis/agent/infrastructure/vector/VectorStoreClient.java",
+      "timestamp": 1784732629472,
+      "startOffset": 261,
+      "endOffset": 461,
+      "codeContent": "io.qdrant.client.grpc.Points.Filter;\nimport io.qdrant.client.grpc.Points.ScoredPoint;\nimport io.qdrant.client.grpc.Points.SearchPoints;\nimport io.qdrant.client.grpc.Points.WithPayloadSelector;\nimport ",
+      "aiProbability": 95,
+      "aiTool": "AI Assistant",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 5
+    },
+    {
+      "filePath": "/Users/sunze/git/intelligent-diagnosis/data-plane/data-infrastructure/src/main/java/com/company/intelligentdiagnosis/agent/infrastructure/vector/VectorStoreClient.java",
+      "timestamp": 1784732659526,
+      "startOffset": 3394,
+      "endOffset": 4635,
+      "codeContent": "ublic List\u003cScoredPoint\u003e search(String repository, String queryText, int topK) {\n        ensureCollection();\n\n        float[] vector \u003d embeddingGenerator.embed(queryText);\n\n        Filter filter \u003d Filter.newBuilder()\n            .addMust(matchKeyword(\"repository\", repository))\n            .build();\n\n        SearchPoints search \u003d SearchPoints.newBuilder()\n            .setCollectionName(properties.getCollectionName())\n            .addAllVector(toFloatList(vector))\n            .setFilter(filter)\n            .setLimit(topK)\n            .setWithPayload(WithPayloadSelector.newBuilder().setEnable(true).build())\n            .build();\n\n        try {\n            List\u003cScoredPoint\u003e results \u003d client.searchAsync(search).get();\n            log.info(\"Vector search for repository {} returned {} results\", repository, results.size());\n            return results;\n        } catch (InterruptedException e) {\n            Thread.currentThread().interrupt();\n            throw new VectorStoreException(\"Interrupted while searching vectors for repository: \" + repository, e);\n        } catch (ExecutionException e) {\n            throw new VectorStoreException(\"Failed to search vectors for repository: \" + repository, e.getCause());\n        }\n    }\n\n    p",
+      "aiProbability": 70,
+      "aiTool": "AI Assistant",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 30
+    },
+    {
+      "filePath": "/Users/sunze/git/intelligent-diagnosis/data-plane/data-infrastructure/src/main/java/com/company/intelligentdiagnosis/agent/infrastructure/llm/LlmClientConfig.java",
+      "timestamp": 1784732744464,
+      "startOffset": 437,
+      "endOffset": 1674,
+      "codeContent": "http.client.SimpleClientHttpRequestFactory;\nimport org.springframework.web.client.RestClient;\n\nimport java.time.Duration;\n\n@Configuration\n@EnableConfigurationProperties(LlmProperties.class)\npublic class LlmClientConfig {\n\n    @Bean\n    @ConditionalOnProperty(name \u003d \"llm.provider\", havingValue \u003d \"mock\", matchIfMissing \u003d true)\n    public LlmClient mockLlmClient() {\n        return new MockDiagnosisLlmClient();\n    }\n\n    @Bean\n    @ConditionalOnProperty(name \u003d \"llm.provider\", havingValue \u003d \"openai\")\n    public LlmClient openAiLlmClient(LlmProperties properties) {\n        if (properties.getApiKey() \u003d\u003d null || properties.getApiKey().isBlank()) {\n            throw new IllegalStateException(\"LLM provider is openai but LLM_API_KEY is not configured\");\n        }\n        SimpleClientHttpRequestFactory factory \u003d new SimpleClientHttpRequestFactory();\n        factory.setConnectTimeout(Duration.ofSeconds(properties.getTimeoutSeconds()));\n        factory.setReadTimeout(Duration.ofSeconds(properties.getTimeoutSeconds()));\n\n        RestClient restClient \u003d RestClient.builder()\n            .baseUrl(properties.getBaseUrl())\n            .defaultHeader(\"Authorization\", \"Bearer \" + properties.getApiKey())\n            .requestFactory(factory",
+      "aiProbability": 95,
+      "aiTool": "AI Assistant",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 29
+    },
+    {
+      "filePath": "/Users/sunze/git/intelligent-diagnosis/data-plane/data-infrastructure/src/main/java/com/company/intelligentdiagnosis/agent/infrastructure/vector/TokenHashEmbeddingGenerator.java",
+      "timestamp": 1784732804553,
+      "startOffset": 98,
+      "endOffset": 177,
+      "codeContent": "boot.autoconfigure.condition.ConditionalOnProperty;\nimport org.springframework.",
+      "aiProbability": 90,
+      "aiTool": "AI Assistant",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 2
+    },
+    {
+      "filePath": "/Users/sunze/git/intelligent-diagnosis/data-plane/data-application/src/main/java/com/company/intelligentdiagnosis/agent/application/DiagnosisApplicationService.java",
+      "timestamp": 1784732909522,
+      "startOffset": 124,
+      "endOffset": 5094,
+      "codeContent": "CodeRetriever;\nimport com.company.intelligentdiagnosis.agent.domain.diagnosis.CodeSnippet;\nimport com.company.intelligentdiagnosis.agent.domain.diagnosis.DiagnosisAuditor;\nimport com.company.intelligentdiagnosis.agent.domain.diagnosis.DiagnosisRequest;\nimport com.company.intelligentdiagnosis.agent.domain.diagnosis.DiagnosisResponse;\nimport com.company.intelligentdiagnosis.agent.domain.diagnosis.PolicyEngine;\nimport com.company.intelligentdiagnosis.agent.domain.llm.LlmClient;\nimport com.fasterxml.jackson.core.JsonProcessingException;\nimport com.fasterxml.jackson.databind.ObjectMapper;\nimport org.slf4j.Logger;\nimport org.slf4j.LoggerFactory;\nimport org.springframework.stereotype.Service;\n\nimport java.util.List;\n\n@Service\npublic class DiagnosisApplicationService {\n\n    private static final Logger log \u003d LoggerFactory.getLogger(DiagnosisApplicationService.class);\n\n    private static final String SYSTEM_PROMPT \u003d \"\"\"\n        You are an expert software engineering assistant. Given a user query, error information, service name, and relevant code snippets, analyze the problem and produce a structured diagnosis in Chinese.\n        Return ONLY a JSON object with this shape:\n        {\n          \"summary\": \"one-sentence summary of the issue\",\n          \"rootCause\": \"detailed root cause analysis\",\n          \"suggestions\": [\"actionable fix 1\", \"actionable fix 2\", ...]\n        }\n        Do not include markdown fences, explanations, or any text outside the JSON.\n        \"\"\";\n\n    private final CodeRetriever codeRetriever;\n    private final LlmClient llmClient;\n    private final DiagnosisAuditor auditor;\n    private final PolicyEngine policyEngine;\n    private final ObjectMapper objectMapper;\n\n    public DiagnosisApplicationService(CodeRetriever codeRetriever,\n                                       LlmClient llmClient,\n                                       DiagnosisAuditor auditor,\n                                       PolicyEngine policyEngine,\n                                       ObjectMapper objectMapper) {\n        this.codeRetriever \u003d codeRetriever;\n        this.llmClient \u003d llmClient;\n        this.auditor \u003d auditor;\n        this.policyEngine \u003d policyEngine;\n        this.objectMapper \u003d objectMapper;\n    }\n\n    public DiagnosisResponse diagnose(DiagnosisRequest request) {\n        long start \u003d System.currentTimeMillis();\n        policyEngine.validate(request);\n\n        List\u003cCodeSnippet\u003e relatedCode \u003d codeRetriever.retrieve(request);\n        String userPrompt \u003d buildUserPrompt(request, relatedCode);\n\n        String rawResponse \u003d llmClient.complete(SYSTEM_PROMPT, userPrompt);\n        DiagnosisResponse response \u003d parseResponse(rawResponse, relatedCode);\n\n        long duration \u003d System.currentTimeMillis() - start;\n        auditor.record(request, response, duration);\n\n        return response;\n    }\n\n    private String buildUserPrompt(DiagnosisRequest request, List\u003cCodeSnippet\u003e snippets) {\n        StringBuilder builder \u003d new StringBuilder();\n        builder.append(\"Service: \").append(request.service()).append(\"\\n\");\n        if (request.query() !\u003d null \u0026\u0026 !request.query().isBlank()) {\n            builder.append(\"Query: \").append(request.query()).append(\"\\n\");\n        }\n        if (request.errorInfo() !\u003d null \u0026\u0026 !request.errorInfo().isBlank()) {\n            builder.append(\"Error Info: \").append(request.errorInfo()).append(\"\\n\");\n        }\n        if (!snippets.isEmpty()) {\n            builder.append(\"\\nRelevant Code Snippets:\\n\");\n            for (CodeSnippet snippet : snippets) {\n                builder.append(snippet.filePath())\n                    .append(\":\").append(snippet.startLine()).append(\"-\").append(snippet.endLine())\n                    .append(\"\\n```\\n\")\n                    .append(snippet.content())\n                    .append(\"\\n```\\n\\n\");\n            }\n        }\n        return builder.toString().trim();\n    }\n\n    private DiagnosisResponse parseResponse(String rawResponse, List\u003cCodeSnippet\u003e relatedCode) {\n        String cleaned \u003d stripMarkdownFences(rawResponse);\n        try {\n            ParsedLlmResponse parsed \u003d objectMapper.readValue(cleaned, ParsedLlmResponse.class);\n            return new DiagnosisResponse(\n                parsed.summary,\n                parsed.rootCause,\n                parsed.suggestions,\n                relatedCode\n            );\n        } catch (JsonProcessingException e) {\n            log.warn(\"Failed to parse LLM response as JSON, using fallback. Response: {}\", rawResponse, e);\n            return new DiagnosisResponse(\n                rawResponse.trim(),\n                \"\",\n                List.of(),\n                relatedCode\n            );\n        }\n    }\n\n    private String stripMarkdownFences(String text) {\n        return text.replaceAll(\"(?s)^\\\\s*```(?:json)?\\\\s*\", \"\")\n            .replaceAll(\"(?s)\\\\s*```\\\\s*$\", \"\");\n    }\n\n    private record ParsedLlmResponse(\n        String summary,\n        String rootCause,\n        List\u003cString\u003e suggestions\n    ) {",
+      "aiProbability": 95,
+      "aiTool": "AI Assistant",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 118
+    },
+    {
+      "filePath": "/Users/sunze/git/intelligent-diagnosis/data-plane/data-api/src/main/java/com/company/intelligentdiagnosis/agent/api/DiagnosisController.java",
+      "timestamp": 1784732945182,
+      "startOffset": 99,
+      "endOffset": 2678,
+      "codeContent": "application.DiagnosisApplicationService;\nimport com.company.intelligentdiagnosis.agent.domain.diagnosis.CodeSnippet;\nimport com.company.intelligentdiagnosis.agent.domain.diagnosis.DiagnosisRequest;\nimport com.company.intelligentdiagnosis.agent.domain.diagnosis.DiagnosisResponse;\nimport org.slf4j.Logger;\nimport org.slf4j.LoggerFactory;\nimport org.springframework.http.ResponseEntity;\nimport org.springframework.web.bind.annotation.PostMapping;\nimport org.springframework.web.bind.annotation.RequestBody;\nimport org.springframework.web.bind.annotation.RequestMapping;\nimport org.springframework.web.bind.annotation.RestController;\n\nimport java.util.List;\n\n@RestController\n@RequestMapping(\"/api/data/diagnosis\")\npublic class DiagnosisController {\n\n    private static final Logger log \u003d LoggerFactory.getLogger(DiagnosisController.class);\n\n    private final DiagnosisApplicationService diagnosisApplicationService;\n\n    public DiagnosisController(DiagnosisApplicationService diagnosisApplicationService) {\n        this.diagnosisApplicationService \u003d diagnosisApplicationService;\n    }\n\n    @PostMapping\n    public ResponseEntity\u003cApiResponse\u003cDiagnosisResponseDto\u003e\u003e diagnose(@RequestBody DiagnosisRequestDto request) {\n        try {\n            DiagnosisRequest domainRequest \u003d new DiagnosisRequest(\n                request.query(),\n                request.errorInfo(),\n                request.service(),\n                null,\n                null\n            );\n            DiagnosisResponse result \u003d diagnosisApplicationService.diagnose(domainRequest);\n            return ResponseEntity.ok(ApiResponse.ok(toDto(result)));\n        } catch (Exception e) {\n            log.error(\"Diagnosis failed for service {}: {}\", request.service(), e.getMessage(), e);\n            return ResponseEntity.ok(ApiResponse.error(\"诊断失败: \" + e.getMessage()));\n        }\n    }\n\n    private DiagnosisResponseDto toDto(DiagnosisResponse response) {\n        return new DiagnosisResponseDto(\n            response.summary(),\n            response.rootCause(),\n            response.suggestions(),\n            response.relatedCode().stream()\n                .map(this::toDto)\n                .toList()\n        );\n    }\n\n    private CodeSnippetDto toDto(CodeSnippet snippet) {\n        return new CodeSnippetDto(\n            snippet.filePath(),\n            snippet.startLine(),\n            snippet.endLine(),\n            snippet.content()\n        );\n    }\n\n    public record DiagnosisRequestDto(\n        String query,\n        String errorInfo,\n        String service\n    ) {}\n\n    public record DiagnosisResponseDto",
+      "aiProbability": 95,
+      "aiTool": "AI Assistant",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 71
+    },
+    {
+      "filePath": "/Users/sunze/git/intelligent-diagnosis/data-plane/data-boot/src/main/java/com/company/intelligentdiagnosis/agent/boot/DataPlaneApplication.java",
+      "timestamp": 1784732974920,
+      "startOffset": 115,
+      "endOffset": 1233,
+      "codeContent": "diagnosis.DiagnosisProperties;\nimport com.company.intelligentdiagnosis.agent.infrastructure.llm.LlmProperties;\nimport com.company.intelligentdiagnosis.agent.infrastructure.parse.ParseWorkerProperties;\nimport com.company.intelligentdiagnosis.agent.infrastructure.vector.EmbeddingProperties;\nimport org.springframework.boot.SpringApplication;\nimport org.springframework.boot.autoconfigure.SpringBootApplication;\nimport org.springframework.boot.autoconfigure.domain.EntityScan;\nimport org.springframework.boot.context.properties.EnableConfigurationProperties;\nimport org.springframework.data.jpa.repository.config.EnableJpaRepositories;\nimport org.springframework.scheduling.annotation.EnableScheduling;\n\n@SpringBootApplication(scanBasePackages \u003d \"com.company.intelligentdiagnosis.agent\")\n@EnableJpaRepositories(basePackages \u003d \"com.company.intelligentdiagnosis.agent.infrastructure\")\n@EntityScan(basePackages \u003d \"com.company.intelligentdiagnosis.agent.infrastructure\")\n@EnableConfigurationProperties({\n    ParseWorkerProperties.class,\n    LlmProperties.class,\n    EmbeddingProperties.class,\n    DiagnosisProperties.class\n}",
+      "aiProbability": 95,
+      "aiTool": "AI Assistant",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 20
+    },
+    {
+      "filePath": "/Users/sunze/git/intelligent-diagnosis/frontend/src/types/index.ts",
+      "timestamp": 1784733034987,
+      "startOffset": 17,
+      "endOffset": 305,
+      "codeContent": "ApiResponse\u003cT\u003e {\n  success: boolean\n  data?: T\n  error?: string\n}\n\nexport interface DiagnosisRequest {\n  query: string\n  errorInfo?: string\n  service: string\n}\n\nexport interface DiagnosisResponse {\n  summary: string\n  rootCause: string\n  suggestions: string[]\n  relatedCode: CodeSnippet[]",
+      "aiProbability": 90,
+      "aiTool": "AI Assistant",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 17
+    },
+    {
+      "filePath": "/Users/sunze/git/intelligent-diagnosis/data-plane/data-infrastructure/src/main/java/com/company/intelligentdiagnosis/agent/infrastructure/diagnosis/QdrantCodeRetriever.java",
+      "timestamp": 1784733110097,
+      "startOffset": 425,
+      "endOffset": 467,
+      "codeContent": "JsonWithInt;\nimport io.qdrant.client.grpc.",
+      "aiProbability": 90,
+      "aiTool": "AI Assistant",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 2
+    }
+  ],
+  "toolStats": {
+    "AI Assistant": {
+      "usageCount": 28,
+      "totalLines": 937
+    }
+  }
+}

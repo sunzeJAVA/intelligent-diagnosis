@@ -1,0 +1,26 @@
+# Git
+.git/
+.gitignore
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Build outputs
+**/target/
+**/dist/
+**/build/
+**/node_modules/
+**/bin/
+**/obj/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local data
+**/postgres-data/
+**/qdrant-storage/
+**/neo4j-data/
+**/temporal-db-data/

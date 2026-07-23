@@ -1,0 +1,4 @@
+org.eclipse.aether.named.providers.FileLockNamedLockFactory
+org.eclipse.aether.named.providers.LocalReadWriteLockNamedLockFactory
+org.eclipse.aether.named.providers.LocalSemaphoreNamedLockFactory
+org.eclipse.aether.named.providers.NoopNamedLockFactory

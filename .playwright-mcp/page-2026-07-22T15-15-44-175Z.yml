@@ -1,0 +1,28 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - heading "智能代码诊断系统" [level=1] [ref=e5]
+    - navigation [ref=e6]:
+      - link "诊断" [ref=e7] [cursor=pointer]:
+        - /url: /
+      - link "仓库" [ref=e8] [cursor=pointer]:
+        - /url: /repositories
+      - link "审批" [ref=e9] [cursor=pointer]:
+        - /url: /approvals
+      - link "工作流" [ref=e10] [cursor=pointer]:
+        - /url: /workflows
+      - link "管理" [ref=e11] [cursor=pointer]:
+        - /url: /admin
+  - main [ref=e12]:
+    - generic [ref=e13]:
+      - heading "代码诊断" [level=2] [ref=e14]
+      - generic [ref=e15]:
+        - textbox "输入错误信息、异常堆栈或代码片段..." [ref=e16]
+        - textbox "补充错误堆栈或上下文（可选）" [ref=e17]
+        - generic [ref=e18]:
+          - combobox [ref=e19]:
+            - option "选择服务"
+            - option "payment-service"
+            - option "user-service"
+            - option "order-service"
+            - option "skykiwi-news-server" [selected]
+          - button "开始诊断" [ref=e20] [cursor=pointer]

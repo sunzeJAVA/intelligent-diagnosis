@@ -1,0 +1,86 @@
+syntax = "proto3";
+
+package intelligent_diagnosis.parse;
+
+option java_package = "com.company.intelligentdiagnosis.parse";
+option java_multiple_files = true;
+option csharp_namespace = "IntelligentDiagnosis.Parse";
+
+service ParseWorker {
+  rpc Parse(ParseRequest) returns (ParseResponse);
+  rpc HealthCheck(HealthRequest) returns (HealthResponse);
+}
+
+message ParseRequest {
+  string repository = 1;
+  string commit_hash = 2;
+  string repo_path = 3;
+  repeated string changed_files = 4;
+  string language = 5;
+}
+
+message ParseResponse {
+  repeated CodeElement elements = 1;
+  repeated ParseError errors = 2;
+  int64 duration_ms = 3;
+}
+
+message CodeElement {
+  string id = 1;
+  ElementKind kind = 2;
+  string name = 3;
+  string qualified_name = 4;
+  string file_path = 5;
+  int32 start_line = 6;
+  int32 end_line = 7;
+  string source_code = 8;
+  string documentation = 9;
+  repeated string modifiers = 10;
+  repeated Relation relations = 11;
+  map<string, string> metadata = 12;
+}
+
+enum ElementKind {
+  UNKNOWN = 0;
+  NAMESPACE = 1;
+  CLASS = 2;
+  INTERFACE = 3;
+  METHOD = 4;
+  FUNCTION = 5;
+  PROPERTY = 6;
+  FIELD = 7;
+  VARIABLE = 8;
+}
+
+message Relation {
+  RelationKind kind = 1;
+  string target_id = 2;
+}
+
+enum RelationKind {
+  CALLS = 0;
+  IMPLEMENTS = 1;
+  EXTENDS = 2;
+  DEPENDS_ON = 3;
+  CONTAINS = 4;
+}
+
+message ParseError {
+  string file_path = 1;
+  int32 line = 2;
+  string message = 3;
+  ErrorSeverity severity = 4;
+}
+
+enum ErrorSeverity {
+  WARNING = 0;
+  ERROR = 1;
+  FATAL = 2;
+}
+
+message HealthRequest {}
+
+message HealthResponse {
+  bool healthy = 1;
+  string version = 2;
+}

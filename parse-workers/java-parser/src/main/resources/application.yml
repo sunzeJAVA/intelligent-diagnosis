@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: java-parser
+  threads:
+    virtual:
+      enabled: true
+
+server:
+  port: 8083
+
+grpc:
+  server:
+    port: 9093
+    max-inbound-message-size: 104857600
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true

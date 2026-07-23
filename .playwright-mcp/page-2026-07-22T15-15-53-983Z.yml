@@ -1,0 +1,73 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - heading "智能代码诊断系统" [level=1] [ref=e5]
+    - navigation [ref=e6]:
+      - link "诊断" [ref=e7] [cursor=pointer]:
+        - /url: /
+      - link "仓库" [ref=e8] [cursor=pointer]:
+        - /url: /repositories
+      - link "审批" [ref=e9] [cursor=pointer]:
+        - /url: /approvals
+      - link "工作流" [ref=e10] [cursor=pointer]:
+        - /url: /workflows
+      - link "管理" [ref=e11] [cursor=pointer]:
+        - /url: /admin
+  - main [ref=e12]:
+    - generic [ref=e13]:
+      - heading "代码诊断" [level=2] [ref=e14]
+      - generic [ref=e15]:
+        - textbox "输入错误信息、异常堆栈或代码片段..." [ref=e16]: NullPointerException in SpecialListDTO
+        - textbox "补充错误堆栈或上下文（可选）" [ref=e17]
+        - generic [ref=e18]:
+          - combobox [ref=e19]:
+            - option "选择服务"
+            - option "payment-service"
+            - option "user-service"
+            - option "order-service"
+            - option "skykiwi-news-server" [selected]
+          - button "开始诊断" [ref=e20] [cursor=pointer]
+      - generic [ref=e21]:
+        - heading "诊断结果" [level=3] [ref=e22]
+        - generic [ref=e23]:
+          - heading "摘要" [level=4] [ref=e24]
+          - paragraph [ref=e25]: 当前使用 Mock LLM，未接入真实模型
+        - generic [ref=e26]:
+          - heading "根因" [level=4] [ref=e27]
+          - paragraph [ref=e28]: llm.provider=mock，系统仅返回固定诊断结果用于流程验证。
+        - generic [ref=e29]:
+          - heading "建议" [level=4] [ref=e30]
+          - list [ref=e31]:
+            - listitem [ref=e32]: 设置环境变量 LLM_PROVIDER=openai 并配置 LLM_API_KEY
+            - listitem [ref=e33]: 重启 data-plane 以使用真实 LLM 生成诊断
+        - generic [ref=e34]:
+          - heading "相关代码" [level=4] [ref=e35]
+          - generic [ref=e36]:
+            - generic [ref=e37]: information-business/src/main/java/com/skykiwi/information/business/application/biz/SessionService.java:45-103
+            - generic [ref=e38]: com.skykiwi.information.business.application.biz.SessionService.public Pair<String, String> createSession(Long passportUserId, String name, String nickname, String avatarUrl, UserGenderEnum gender, String version, String osType, String osVersion, String deviceVendor, String deviceType, String flavor, String ipAddress) throws BusinessException
+          - generic [ref=e39]:
+            - generic [ref=e40]: information-shipping-thirdparty/src/main/java/com/skykiwi/information/shipping/third/dingdang/client/DingdangClient.java:313-326
+            - generic [ref=e41]: com.skykiwi.information.shipping.third.dingdang.client.DingdangClient.public String searchAudio(String keyword, int page, int pageSize, String token) throws DingdangClientException
+          - generic [ref=e42]:
+            - generic [ref=e43]: information-common/src/main/java/com/skykiwi/common/utils/alarm/GoogleOAuth2Helper.java:31-51
+            - generic [ref=e44]: com.skykiwi.common.utils.alarm.GoogleOAuth2Helper.public static String getAuthorizationUrl(String clientId, String clientSecret, String redirectUri)
+          - generic [ref=e45]:
+            - generic [ref=e46]: information-common/src/main/java/com/skykiwi/common/web/PathResolver.java:11-11
+            - generic [ref=e47]: com.skykiwi.common.web.PathResolver. abstract String getPath(String uri, String prefix)
+          - generic [ref=e48]:
+            - generic [ref=e49]: information-business/src/main/java/com/skykiwi/information/business/search/biz/SearchService.java:95-97
+            - generic [ref=e50]: com.skykiwi.information.business.search.biz.SearchService.protected String indexName(String name)
+          - generic [ref=e51]:
+            - generic [ref=e52]: information-common/src/main/java/com/skykiwi/common/utils/ImageUrlProcessor.java:167-180
+            - generic [ref=e53]: com.skykiwi.common.utils.ImageUrlProcessor.public static String replaceDomainAndProcess(String originalUrl, String oldDomain, String newDomain, ImageSizeType sizeType)
+          - generic [ref=e54]:
+            - generic [ref=e55]: information-business/src/main/java/com/skykiwi/information/business/shop/biz/ShopService.java:271-281
+            - generic [ref=e56]: com.skykiwi.information.business.shop.biz.ShopService.public void saveJcInfo(String mobile, String address, String openTime, Integer id, String other)
+          - generic [ref=e57]:
+            - generic [ref=e58]: information-shipping-thirdparty/src/main/java/com/skykiwi/information/shipping/third/bbs/client/BbsClient.java:284-299
+            - generic [ref=e59]: com.skykiwi.information.shipping.third.bbs.client.BbsClient.public String search(String keyword, int page, int pageSize, String token) throws BbsClientException
+          - generic [ref=e60]:
+            - generic [ref=e61]: information-common/src/main/java/com/skykiwi/common/utils/alarm/GoogleOAuth2Helper.java:61-84
+            - generic [ref=e62]: com.skykiwi.common.utils.alarm.GoogleOAuth2Helper.public static GoogleCredential getCredentialFromCode(String clientId, String clientSecret, String redirectUri, String authorizationCode)
+          - generic [ref=e63]:
+            - generic [ref=e64]: information-shipping-thirdparty/src/main/java/com/skykiwi/information/shipping/third/dingdang/client/DingdangClient.java:69-81
+            - generic [ref=e65]: com.skykiwi.information.shipping.third.dingdang.client.DingdangClient.public String getArticles(Integer page, Integer pageSize, String token, String ua) throws DingdangClientException
