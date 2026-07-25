@@ -7,6 +7,10 @@ import org.springframework.web.client.RestClient;
 
 import java.util.List;
 
+/**
+ * OpenAI 兼容的 LLM 客户端实现
+ * 通过 REST API 调用 OpenAI 或兼容的 LLM 服务
+ */
 public class OpenAiLlmClient implements LlmClient {
 
     private static final Logger log = LoggerFactory.getLogger(OpenAiLlmClient.class);
@@ -14,6 +18,12 @@ public class OpenAiLlmClient implements LlmClient {
     private final RestClient restClient;
     private final LlmProperties properties;
 
+    /**
+     * 构造函数
+     *
+     * @param restClient HTTP 客户端
+     * @param properties LLM 配置属性
+     */
     public OpenAiLlmClient(RestClient restClient, LlmProperties properties) {
         this.restClient = restClient;
         this.properties = properties;

@@ -10,6 +10,10 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+/**
+ * 解析应用服务
+ * 协调代码解析和索引流程：发送解析任务 → 接收解析结果 → 向量索引 → 图构建
+ */
 @Service
 public class ParseApplicationService {
 
@@ -17,6 +21,13 @@ public class ParseApplicationService {
     private final VectorStoreClient vectorStoreClient;
     private final GraphStoreClient graphStoreClient;
 
+    /**
+     * 构造函数
+     *
+     * @param parseWorkerClient 解析工作器客户端
+     * @param vectorStoreClient 向量存储客户端
+     * @param graphStoreClient  图存储客户端
+     */
     public ParseApplicationService(ParseWorkerClient parseWorkerClient,
                                    VectorStoreClient vectorStoreClient,
                                    GraphStoreClient graphStoreClient) {
@@ -25,6 +36,12 @@ public class ParseApplicationService {
         this.graphStoreClient = graphStoreClient;
     }
 
+    /**
+     * 解析并索引代码
+     *
+     * @param command 解析命令
+     * @return 解析后的代码元素列表
+     */
     public List<CodeElement> parseAndIndex(ParseCommand command) {
         ParseRequest request = ParseRequest.newBuilder()
             .setRepository(command.repository())

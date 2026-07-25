@@ -13,6 +13,10 @@ import jakarta.persistence.Table;
 
 import java.time.Instant;
 
+/**
+ * 仓库配置实体
+ * 存储代码仓库的配置信息
+ */
 @Entity
 @Table(name = "repository_config")
 public class RepositoryConfigEntity {

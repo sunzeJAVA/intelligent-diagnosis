@@ -7,7 +7,6 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.TransportCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
@@ -29,16 +28,31 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Git 仓库提供者
+ * 实现 Git 仓库的克隆、拉取、变更检测等操作
+ */
 @Component
 public class GitRepositoryProvider implements RepositoryProvider {
 
     private static final Logger log = LoggerFactory.getLogger(GitRepositoryProvider.class);
 
+    /**
+     * Git 凭证工厂
+     */
     private final GitCredentialFactory credentialFactory;
 
+    /**
+     * 同步超时时间（秒）
+     */
     @Value("${repository.sync.timeout-seconds:600}")
     private int timeoutSeconds;
 
+    /**
+     * 创建实例
+     *
+     * @param credentialFactory Git 凭证工厂
+     */
     public GitRepositoryProvider(GitCredentialFactory credentialFactory) {
         this.credentialFactory = credentialFactory;
     }
@@ -131,6 +145,13 @@ public class GitRepositoryProvider implements RepositoryProvider {
         }
     }
 
+    /**
+     * 克隆仓库
+     *
+     * @param config      仓库配置
+     * @param localPath   本地路径
+     * @param credentials 凭证提供者
+     */
     private void cloneRepository(RepositoryConfigEntity config, Path localPath, CredentialsProvider credentials) {
         boolean directoryExisted = Files.exists(localPath);
         var cloneCommand = Git.cloneRepository()
@@ -160,6 +181,13 @@ public class GitRepositoryProvider implements RepositoryProvider {
         }
     }
 
+    /**
+     * 拉取仓库更新
+     *
+     * @param config      仓库配置
+     * @param localPath   本地路径
+     * @param credentials 凭证提供者
+     */
     private void pullRepository(RepositoryConfigEntity config, Path localPath, CredentialsProvider credentials)
         throws GitAPIException, IOException {
         try (Git git = Git.open(localPath.toFile())) {
@@ -177,6 +205,14 @@ public class GitRepositoryProvider implements RepositoryProvider {
         }
     }
 
+    /**
+     * 配置 Git 传输命令的认证方式
+     *
+     * @param command     Git 传输命令
+     * @param config      仓库配置
+     * @param credentials 凭证提供者
+     * @return SSH 会话工厂，如果不需要则返回 null
+     */
     private SshSessionFactory configureAuthentication(TransportCommand<?, ?> command,
                                                       RepositoryConfigEntity config,
                                                       CredentialsProvider credentials) {
@@ -195,6 +231,12 @@ public class GitRepositoryProvider implements RepositoryProvider {
         return null;
     }
 
+    /**
+     * 创建 SSH 会话工厂
+     *
+     * @param config 仓库配置
+     * @return SSH 会话工厂
+     */
     private SshSessionFactory createSshSessionFactory(RepositoryConfigEntity config) {
         String keyPath = config.getAuthSshKeyPath();
         if (keyPath == null || keyPath.isBlank()) {
@@ -218,6 +260,11 @@ public class GitRepositoryProvider implements RepositoryProvider {
         };
     }
 
+    /**
+     * 安静关闭 SSH 会话工厂
+     *
+     * @param factory SSH 会话工厂
+     */
     private void closeQuietly(SshSessionFactory factory) {
         if (factory instanceof Closeable closeable) {
             try {
@@ -228,6 +275,11 @@ public class GitRepositoryProvider implements RepositoryProvider {
         }
     }
 
+    /**
+     * 递归删除目录
+     *
+     * @param path 目录路径
+     */
     private void deleteRecursively(Path path) {
         try {
             if (Files.exists(path)) {
@@ -246,6 +298,12 @@ public class GitRepositoryProvider implements RepositoryProvider {
         }
     }
 
+    /**
+     * 打开 Git 仓库
+     *
+     * @param localPath 本地路径
+     * @return Git 仓库对象
+     */
     private Repository openRepository(Path localPath) throws IOException {
         FileRepositoryBuilder builder = new FileRepositoryBuilder();
         return builder.setGitDir(localPath.resolve(".git").toFile())
@@ -254,6 +312,13 @@ public class GitRepositoryProvider implements RepositoryProvider {
             .build();
     }
 
+    /**
+     * 准备树解析器
+     *
+     * @param walk   RevWalk 对象
+     * @param commit 提交对象
+     * @return 树解析器
+     */
     private org.eclipse.jgit.treewalk.CanonicalTreeParser prepareTreeParser(RevWalk walk, RevCommit commit) {
         try {
             ObjectId treeId = commit.getTree().getId();

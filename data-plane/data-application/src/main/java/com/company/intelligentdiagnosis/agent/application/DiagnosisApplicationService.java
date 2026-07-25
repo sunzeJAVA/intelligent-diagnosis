@@ -15,6 +15,10 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+/**
+ * 诊断应用服务
+ * 协调诊断流程：策略验证 → 代码检索 → LLM分析 → 结果解析 → 审计记录
+ */
 @Service
 public class DiagnosisApplicationService {
 
@@ -37,6 +41,15 @@ public class DiagnosisApplicationService {
     private final PolicyEngine policyEngine;
     private final ObjectMapper objectMapper;
 
+    /**
+     * 构造函数
+     *
+     * @param codeRetriever 代码检索器
+     * @param llmClient     LLM 客户端
+     * @param auditor       诊断审计器
+     * @param policyEngine  策略引擎
+     * @param objectMapper  JSON 序列化器
+     */
     public DiagnosisApplicationService(CodeRetriever codeRetriever,
                                        LlmClient llmClient,
                                        DiagnosisAuditor auditor,
@@ -49,6 +62,12 @@ public class DiagnosisApplicationService {
         this.objectMapper = objectMapper;
     }
 
+    /**
+     * 执行智能诊断
+     *
+     * @param request 诊断请求
+     * @return 诊断响应
+     */
     public DiagnosisResponse diagnose(DiagnosisRequest request) {
         long start = System.currentTimeMillis();
         policyEngine.validate(request);
@@ -65,6 +84,14 @@ public class DiagnosisApplicationService {
         return response;
     }
 
+    /**
+     * 构建用户提示词
+     * 将诊断请求和相关代码片段组合成完整的提示词
+     *
+     * @param request  诊断请求
+     * @param snippets 相关代码片段列表
+     * @return 完整的用户提示词
+     */
     private String buildUserPrompt(DiagnosisRequest request, List<CodeSnippet> snippets) {
         StringBuilder builder = new StringBuilder();
         builder.append("Service: ").append(request.service()).append("\n");
@@ -87,6 +114,14 @@ public class DiagnosisApplicationService {
         return builder.toString().trim();
     }
 
+    /**
+     * 解析 LLM 响应
+     * 将 LLM 返回的 JSON 字符串解析为 DiagnosisResponse 对象
+     *
+     * @param rawResponse LLM 原始响应
+     * @param relatedCode 相关代码片段列表
+     * @return 解析后的诊断响应
+     */
     private DiagnosisResponse parseResponse(String rawResponse, List<CodeSnippet> relatedCode) {
         String cleaned = stripMarkdownFences(rawResponse);
         try {
@@ -108,11 +143,20 @@ public class DiagnosisApplicationService {
         }
     }
 
+    /**
+     * 移除 Markdown 代码块围栏
+     *
+     * @param text 原始文本
+     * @return 移除围栏后的文本
+     */
     private String stripMarkdownFences(String text) {
         return text.replaceAll("(?s)^\\s*```(?:json)?\\s*", "")
             .replaceAll("(?s)\\s*```\\s*$", "");
     }
 
+    /**
+     * LLM 响应解析结构
+     */
     private record ParsedLlmResponse(
         String summary,
         String rootCause,

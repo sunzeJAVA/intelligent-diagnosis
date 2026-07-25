@@ -15,17 +15,43 @@ import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.Base64;
 
+/**
+ * 加密字符串转换器
+ * 使用 AES/GCM 算法对敏感字符串进行加密存储，确保仓库凭证安全
+ */
 @Converter
 public class EncryptedStringConverter implements AttributeConverter<String, String> {
 
     private static final Logger log = LoggerFactory.getLogger(EncryptedStringConverter.class);
 
+    /**
+     * 加密算法：AES/GCM/NoPadding
+     */
     private static final String ALGORITHM = "AES/GCM/NoPadding";
+
+    /**
+     * GCM IV 长度（字节）
+     */
     private static final int GCM_IV_LENGTH = 12;
+
+    /**
+     * GCM 认证标签长度（位）
+     */
     private static final int GCM_TAG_LENGTH = 128;
+
+    /**
+     * AES 密钥长度（字节）
+     */
     private static final int KEY_LENGTH = 32;
+
+    /**
+     * 环境变量名称，用于获取加密密钥
+     */
     private static final String KEY_ENV = "REPOSITORY_ENCRYPTION_KEY";
 
+    /**
+     * 加密密钥（静态初始化）
+     */
     private static final SecretKey SECRET_KEY;
 
     static {
@@ -55,7 +81,6 @@ public class EncryptedStringConverter implements AttributeConverter<String, Stri
         try {
             return decrypt(dbData);
         } catch (IllegalArgumentException e) {
-            // Value is not base64-encoded, likely stored as plaintext (e.g. direct DB update).
             return dbData;
         } catch (Exception e) {
             log.warn("Failed to decrypt repository secret, returning null", e);
@@ -63,6 +88,12 @@ public class EncryptedStringConverter implements AttributeConverter<String, Stri
         }
     }
 
+    /**
+     * 加密明文
+     *
+     * @param plainText 明文
+     * @return 加密后的 Base64 字符串
+     */
     private String encrypt(String plainText) {
         try {
             byte[] iv = new byte[GCM_IV_LENGTH];
@@ -82,6 +113,12 @@ public class EncryptedStringConverter implements AttributeConverter<String, Stri
         }
     }
 
+    /**
+     * 解密密文
+     *
+     * @param cipherText Base64 编码的密文
+     * @return 解密后的明文
+     */
     private String decrypt(String cipherText) {
         try {
             byte[] decoded = Base64.getDecoder().decode(cipherText);
@@ -102,6 +139,12 @@ public class EncryptedStringConverter implements AttributeConverter<String, Stri
         }
     }
 
+    /**
+     * 派生密钥，确保密钥长度为 32 字节
+     *
+     * @param key 原始密钥
+     * @return 标准化后的密钥
+     */
     private static String deriveKey(String key) {
         String normalized = key.trim();
         if (normalized.length() < KEY_LENGTH) {

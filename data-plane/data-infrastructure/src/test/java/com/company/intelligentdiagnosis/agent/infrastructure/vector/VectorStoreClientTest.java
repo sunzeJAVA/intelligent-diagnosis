@@ -5,6 +5,7 @@ import com.company.intelligentdiagnosis.agent.domain.ElementKind;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import io.qdrant.client.QdrantClient;
+import io.qdrant.client.grpc.Collections;
 import io.qdrant.client.grpc.Points;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,6 +21,7 @@ import static org.assertj.core.api.Assertions.offset;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import org.mockito.ArgumentMatchers;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -41,12 +43,9 @@ class VectorStoreClientTest {
 
     @Test
     void shouldSkipUpsertForEmptyList() {
-        when(properties.getCollectionName()).thenReturn("code-elements");
-        when(properties.isCreateCollectionIfMissing()).thenReturn(false);
-
         vectorStoreClient.upsert("repo", List.of());
 
-        verify(qdrantClient, never()).upsertAsync(any(), any());
+        verify(qdrantClient, never()).upsertAsync(anyString(), ArgumentMatchers.<List<Points.PointStruct>>any());
     }
 
     @Test
@@ -54,14 +53,13 @@ class VectorStoreClientTest {
         when(properties.getCollectionName()).thenReturn("code-elements");
         when(properties.isCreateCollectionIfMissing()).thenReturn(true);
         when(qdrantClient.collectionExistsAsync("code-elements")).thenReturn(immediateFuture(true));
-        when(embeddingGenerator.dimension()).thenReturn(384);
         when(embeddingGenerator.embed(any())).thenReturn(new float[384]);
-        when(qdrantClient.upsertAsync(anyString(), any())).thenReturn(immediateFuture(null));
+        when(qdrantClient.upsertAsync(anyString(), ArgumentMatchers.<List<Points.PointStruct>>any())).thenReturn(immediateFuture(null));
 
         vectorStoreClient.upsert("repo", List.of(codeElement()));
 
         verify(qdrantClient).collectionExistsAsync("code-elements");
-        verify(qdrantClient).upsertAsync(eq("code-elements"), any(List.class));
+        verify(qdrantClient).upsertAsync(eq("code-elements"), ArgumentMatchers.<List<Points.PointStruct>>any());
     }
 
     @Test
@@ -70,14 +68,14 @@ class VectorStoreClientTest {
         when(properties.isCreateCollectionIfMissing()).thenReturn(true);
         when(qdrantClient.collectionExistsAsync("code-elements")).thenReturn(immediateFuture(false));
         when(embeddingGenerator.dimension()).thenReturn(384);
-        when(qdrantClient.createCollectionAsync(anyString(), any())).thenReturn(immediateFuture(null));
+        when(qdrantClient.createCollectionAsync(anyString(), ArgumentMatchers.<Collections.VectorParams>any())).thenReturn(immediateFuture(null));
         when(embeddingGenerator.embed(any())).thenReturn(new float[384]);
-        when(qdrantClient.upsertAsync(anyString(), any())).thenReturn(immediateFuture(null));
+        when(qdrantClient.upsertAsync(anyString(), ArgumentMatchers.<List<Points.PointStruct>>any())).thenReturn(immediateFuture(null));
 
         vectorStoreClient.upsert("repo", List.of(codeElement()));
 
-        verify(qdrantClient).createCollectionAsync(eq("code-elements"), any());
-        verify(qdrantClient).upsertAsync(eq("code-elements"), any(List.class));
+        verify(qdrantClient).createCollectionAsync(eq("code-elements"), ArgumentMatchers.<Collections.VectorParams>any());
+        verify(qdrantClient).upsertAsync(eq("code-elements"), ArgumentMatchers.<List<Points.PointStruct>>any());
     }
 
     @Test
@@ -114,7 +112,7 @@ class VectorStoreClientTest {
 
         assertThatThrownBy(() -> vectorStoreClient.upsert("repo", List.of(codeElement())))
             .isInstanceOf(VectorStoreException.class)
-            .hasMessageContaining("Failed to upsert");
+            .hasMessageContaining("Failed to create Qdrant collection");
     }
 
     private CodeElement codeElement() {

@@ -308,12 +308,23 @@
       "aiTool": "AI Assistant",
       "detectionMethod": "REALTIME_SPEED_ANALYSIS",
       "lineCount": 2
+    },
+    {
+      "filePath": "/Users/sunze/git/intelligent-diagnosis/data-plane/data-infrastructure/src/main/java/com/company/intelligentdiagnosis/agent/infrastructure/llm/LlmClientConfig.java",
+      "timestamp": 1784946393236,
+      "startOffset": 168,
+      "endOffset": 2766,
+      "codeContent": "context.properties.EnableConfigurationProperties;\nimport org.springframework.context.annotation.Bean;\nimport org.springframework.context.annotation.Configuration;\nimport org.springframework.http.client.SimpleClientHttpRequestFactory;\nimport org.springframework.web.client.RestClient;\n\nimport java.time.Duration;\nimport java.util.List;\n\n@Configuration\n@EnableConfigurationProperties(LlmProperties.class)\npublic class LlmClientConfig {\n\n    @Bean\n    public LlmClient llmClient(LlmProperties properties) {\n        List\u003cLlmProperties.ModelConfig\u003e models \u003d properties.resolvedModels();\n        if (models.isEmpty()) {\n            return new MockDiagnosisLlmClient();\n        }\n        List\u003cLlmClient\u003e clients \u003d models.stream().map(this::createClient).toList();\n        if (clients.size() \u003d\u003d 1) {\n            return clients.get(0);\n        }\n        return new CompositeLlmClient(clients);\n    }\n\n    private LlmClient createClient(LlmProperties.ModelConfig model) {\n        return switch (model.getProvider().toLowerCase()) {\n            case \"mock\" -\u003e new MockDiagnosisLlmClient();\n            case \"openai\" -\u003e createOpenAiClient(model);\n            default -\u003e throw new IllegalArgumentException(\"Unsupported LLM provider: \" + model.getProvider());\n        };\n    }\n\n    private LlmClient createOpenAiClient(LlmProperties.ModelConfig model) {\n        if (model.getApiKey() \u003d\u003d null || model.getApiKey().isBlank()) {\n            throw new IllegalStateException(\n                \"LLM provider is openai but api-key is not configured for model \" + model.getModel());\n        }\n        SimpleClientHttpRequestFactory factory \u003d new SimpleClientHttpRequestFactory();\n        factory.setConnectTimeout(Duration.ofSeconds(model.getTimeoutSeconds()));\n        factory.setReadTimeout(Duration.ofSeconds(model.getTimeoutSeconds()));\n\n        RestClient restClient \u003d RestClient.builder()\n            .baseUrl(model.getBaseUrl())\n            .defaultHeader(\"Authorization\", \"Bearer \" + model.getApiKey())\n            .requestFactory(factory)\n            .build();\n        return new OpenAiLlmClient(restClient, toProperties(model));\n    }\n\n    private LlmProperties toProperties(LlmProperties.ModelConfig model) {\n        LlmProperties properties \u003d new LlmProperties();\n        properties.setProvider(model.getProvider());\n        properties.setBaseUrl(model.getBaseUrl());\n        properties.setModel(model.getModel());\n        properties.setApiKey(model.getApiKey());\n        properties.setMaxTokens(model.getMaxTokens());\n        properties.setTimeoutSeconds(model.getTimeoutSeconds());\n        return properties",
+      "aiProbability": 95,
+      "aiTool": "AI Assistant",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 60
     }
   ],
   "toolStats": {
     "AI Assistant": {
-      "usageCount": 28,
-      "totalLines": 937
+      "usageCount": 29,
+      "totalLines": 997
     }
   }
 }

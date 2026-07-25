@@ -24,6 +24,10 @@ import static io.qdrant.client.PointIdFactory.id;
 import static io.qdrant.client.ValueFactory.value;
 import static io.qdrant.client.VectorsFactory.vectors;
 
+/**
+ * Qdrant 向量存储客户端
+ * 负责代码元素的向量索引、查询和管理
+ */
 @Component
 public class VectorStoreClient {
 
@@ -33,6 +37,13 @@ public class VectorStoreClient {
     private final EmbeddingGenerator embeddingGenerator;
     private final QdrantProperties properties;
 
+    /**
+     * 构造函数
+     *
+     * @param client              Qdrant 客户端
+     * @param embeddingGenerator  嵌入向量生成器
+     * @param properties          Qdrant 配置属性
+     */
     public VectorStoreClient(QdrantClient client,
                              EmbeddingGenerator embeddingGenerator,
                              QdrantProperties properties) {
@@ -41,6 +52,13 @@ public class VectorStoreClient {
         this.properties = properties;
     }
 
+    /**
+     * 插入或更新向量
+     * 将代码元素转换为向量并存储到 Qdrant
+     *
+     * @param repository 仓库名称
+     * @param elements   代码元素列表
+     */
     public void upsert(String repository, List<CodeElement> elements) {
         if (elements.isEmpty()) {
             return;
@@ -64,6 +82,11 @@ public class VectorStoreClient {
         }
     }
 
+    /**
+     * 删除指定仓库的所有向量
+     *
+     * @param repository 仓库名称
+     */
     public void deleteByRepository(String repository) {
         ensureCollection();
 
@@ -83,6 +106,15 @@ public class VectorStoreClient {
         }
     }
 
+    /**
+     * 向量相似度搜索
+     * 根据查询文本检索相关的代码元素
+     *
+     * @param repository 仓库名称
+     * @param queryText  查询文本
+     * @param topK       返回结果数量
+     * @return 带分数的向量点列表
+     */
     public List<ScoredPoint> search(String repository, String queryText, int topK) {
         ensureCollection();
 
@@ -112,6 +144,10 @@ public class VectorStoreClient {
         }
     }
 
+    /**
+     * 确保集合存在
+     * 如果配置允许且集合不存在，则创建集合
+     */
     private void ensureCollection() {
         if (!properties.isCreateCollectionIfMissing()) {
             return;
@@ -139,6 +175,13 @@ public class VectorStoreClient {
         }
     }
 
+    /**
+     * 将代码元素转换为 Qdrant 点结构
+     *
+     * @param repository 仓库名称
+     * @param element    代码元素
+     * @return 点结构
+     */
     private Points.PointStruct toPointStruct(String repository, CodeElement element) {
         String text = buildEmbeddingText(element);
         float[] vector = embeddingGenerator.embed(text);
@@ -161,10 +204,23 @@ public class VectorStoreClient {
             .build();
     }
 
+    /**
+     * 根据元素 ID 生成点 ID
+     *
+     * @param elementId 元素 ID
+     * @return UUID 点 ID
+     */
     private UUID pointIdFor(String elementId) {
         return UUID.nameUUIDFromBytes(elementId.getBytes(StandardCharsets.UTF_8));
     }
 
+    /**
+     * 构建嵌入文本
+     * 将元素的全限定名、文档和源代码组合成用于嵌入的文本
+     *
+     * @param element 代码元素
+     * @return 嵌入文本
+     */
     private String buildEmbeddingText(CodeElement element) {
         StringBuilder builder = new StringBuilder();
         if (element.qualifiedName() != null && !element.qualifiedName().isBlank()) {
@@ -179,10 +235,22 @@ public class VectorStoreClient {
         return builder.toString().trim();
     }
 
+    /**
+     * 空字符串处理
+     *
+     * @param value 字符串值
+     * @return 非空字符串
+     */
     private String nullToEmpty(String value) {
         return value != null ? value : "";
     }
 
+    /**
+     * 浮点数组转换为列表
+     *
+     * @param vector 浮点数组
+     * @return 浮点列表
+     */
     private List<Float> toFloatList(float[] vector) {
         List<Float> list = new ArrayList<>(vector.length);
         for (float value : vector) {

@@ -1,0 +1,88 @@
+package com.company.intelligentdiagnosis.agent.infrastructure.graph;
+
+import com.company.intelligentdiagnosis.agent.domain.CodeElement;
+import com.company.intelligentdiagnosis.agent.domain.ElementKind;
+import com.company.intelligentdiagnosis.agent.domain.Relation;
+import com.company.intelligentdiagnosis.agent.domain.RelationKind;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.neo4j.driver.Driver;
+import org.neo4j.driver.Result;
+import org.neo4j.driver.Session;
+import org.neo4j.driver.TransactionContext;
+
+import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+@ExtendWith(MockitoExtension.class)
+class GraphStoreClientTest {
+
+    @Mock
+    private Driver driver;
+
+    @Mock
+    private Session session;
+
+    @InjectMocks
+    private GraphStoreClient graphStoreClient;
+
+    @Test
+    void shouldSkipEmptyElements() {
+        graphStoreClient.buildGraph("repo", "commit", List.of());
+
+        verify(driver, never()).session();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void shouldBuildGraph() {
+        when(driver.session()).thenReturn(session);
+
+        CodeElement parent = new CodeElement(
+            "repo/src/Main.java#Main",
+            ElementKind.CLASS,
+            "Main",
+            "Main",
+            "src/Main.java",
+            1,
+            5,
+            "class Main {}",
+            "",
+            List.of("public"),
+            List.of(new Relation(RelationKind.CONTAINS, "repo/src/Main.java#Main#main")),
+            Map.of()
+        );
+
+        graphStoreClient.buildGraph("repo", "abc123", List.of(parent));
+
+        ArgumentCaptor<Consumer<TransactionContext>> captor = ArgumentCaptor.forClass(Consumer.class);
+        verify(session).executeWriteWithoutResult(captor.capture());
+
+        TransactionContext tx = mock(TransactionContext.class);
+        captor.getValue().accept(tx);
+
+        verify(tx).run(anyString(), any(Map.class));
+    }
+
+    @Test
+    void shouldDeleteByRepository() {
+        when(driver.session()).thenReturn(session);
+
+        graphStoreClient.deleteByRepository("repo");
+
+        verify(session).executeWriteWithoutResult(any());
+    }
+}

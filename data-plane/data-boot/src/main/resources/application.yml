@@ -46,12 +46,27 @@ qdrant:
   create-collection-if-missing: true
 
 llm:
+  # Backward-compatible single-model configuration. Used when `models` is empty.
   provider: ${LLM_PROVIDER:mock}
   base-url: ${LLM_BASE_URL:https://api.openai.com/v1}
   model: ${LLM_MODEL:gpt-4o-mini}
   api-key: ${LLM_API_KEY:}
   max-tokens: 2048
   timeout-seconds: 60
+  # Multi-model fallback configuration. Clients are tried in order.
+  # models:
+  #   - provider: openai
+  #     base-url: https://api.openai.com/v1
+  #     model: gpt-4o-mini
+  #     api-key: ${LLM_API_KEY:}
+  #     max-tokens: 2048
+  #     timeout-seconds: 60
+  #   - provider: openai
+  #     base-url: https://api.openai.com/v1
+  #     model: gpt-4o
+  #     api-key: ${LLM_API_KEY:}
+  #     max-tokens: 4096
+  #     timeout-seconds: 60
 
 embedding:
   provider: ${EMBEDDING_PROVIDER:token-hash}

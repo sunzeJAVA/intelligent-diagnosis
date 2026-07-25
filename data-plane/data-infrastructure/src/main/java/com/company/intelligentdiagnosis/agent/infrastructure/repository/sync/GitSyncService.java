@@ -16,15 +16,37 @@ import org.springframework.transaction.support.TransactionTemplate;
 import java.time.Instant;
 import java.util.UUID;
 
+/**
+ * Git 同步服务
+ * 协调仓库同步流程，管理同步状态和事务
+ */
 @Service
 public class GitSyncService {
 
     private static final Logger log = LoggerFactory.getLogger(GitSyncService.class);
 
+    /**
+     * 仓库提供者注册中心
+     */
     private final RepositoryProviderRegistry providerRegistry;
+
+    /**
+     * 同步状态仓库
+     */
     private final RepositorySyncStateRepository syncStateRepository;
+
+    /**
+     * 事务模板
+     */
     private final TransactionTemplate transactionTemplate;
 
+    /**
+     * 创建实例
+     *
+     * @param providerRegistry      仓库提供者注册中心
+     * @param syncStateRepository   同步状态仓库
+     * @param transactionManager    事务管理器
+     */
     public GitSyncService(RepositoryProviderRegistry providerRegistry,
                           RepositorySyncStateRepository syncStateRepository,
                           PlatformTransactionManager transactionManager) {
@@ -33,6 +55,14 @@ public class GitSyncService {
         this.transactionTemplate = new TransactionTemplate(transactionManager);
     }
 
+    /**
+     * 执行仓库同步
+     *
+     * @param config      仓库配置
+     * @param triggerType 触发类型
+     * @param triggeredBy 触发者
+     * @return 同步状态实体
+     */
     public RepositorySyncStateEntity sync(RepositoryConfigEntity config, TriggerType triggerType, String triggeredBy) {
         String stateId = transactionTemplate.execute(status -> createState(config, triggerType, triggeredBy));
 
@@ -51,6 +81,14 @@ public class GitSyncService {
         }
     }
 
+    /**
+     * 创建同步状态记录
+     *
+     * @param config      仓库配置
+     * @param triggerType 触发类型
+     * @param triggeredBy 触发者
+     * @return 状态 ID
+     */
     private String createState(RepositoryConfigEntity config, TriggerType triggerType, String triggeredBy) {
         String stateId = UUID.randomUUID().toString();
         RepositorySyncStateEntity state = new RepositorySyncStateEntity();
@@ -65,6 +103,13 @@ public class GitSyncService {
         return stateId;
     }
 
+    /**
+     * 标记同步成功
+     *
+     * @param stateId 状态 ID
+     * @param result  同步结果
+     * @return 更新后的同步状态实体
+     */
     private RepositorySyncStateEntity markSuccess(String stateId, RepositorySyncResult result) {
         RepositorySyncStateEntity state = syncStateRepository.findById(stateId)
             .orElseThrow(() -> new IllegalStateException("Sync state not found: " + stateId));
@@ -76,6 +121,13 @@ public class GitSyncService {
         return syncStateRepository.save(state);
     }
 
+    /**
+     * 标记同步失败
+     *
+     * @param stateId 状态 ID
+     * @param e       异常
+     * @return 更新后的同步状态实体
+     */
     private RepositorySyncStateEntity markFailed(String stateId, Exception e) {
         RepositorySyncStateEntity state = syncStateRepository.findById(stateId)
             .orElseThrow(() -> new IllegalStateException("Sync state not found: " + stateId));

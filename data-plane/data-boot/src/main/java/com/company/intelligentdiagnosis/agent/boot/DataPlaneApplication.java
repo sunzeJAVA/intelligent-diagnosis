@@ -11,6 +11,10 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
+/**
+ * Data Plane 启动类
+ * 智能诊断系统的数据处理服务入口
+ */
 @SpringBootApplication(scanBasePackages = "com.company.intelligentdiagnosis.agent")
 @EnableJpaRepositories(basePackages = "com.company.intelligentdiagnosis.agent.infrastructure")
 @EntityScan(basePackages = "com.company.intelligentdiagnosis.agent.infrastructure")
@@ -23,6 +27,11 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableScheduling
 public class DataPlaneApplication {
 
+    /**
+     * 启动应用
+     *
+     * @param args 命令行参数
+     */
     public static void main(String[] args) {
         SpringApplication.run(DataPlaneApplication.class, args);
     }

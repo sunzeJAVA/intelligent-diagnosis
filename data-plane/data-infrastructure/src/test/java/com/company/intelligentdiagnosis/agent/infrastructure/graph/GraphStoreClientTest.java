@@ -11,8 +11,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.neo4j.driver.Driver;
-import org.neo4j.driver.Result;
 import org.neo4j.driver.Session;
+import org.neo4j.driver.Value;
 import org.neo4j.driver.TransactionContext;
 
 import java.util.List;
@@ -21,8 +21,10 @@ import java.util.function.Consumer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -71,10 +73,9 @@ class GraphStoreClientTest {
         verify(session).executeWriteWithoutResult(captor.capture());
 
         TransactionContext tx = mock(TransactionContext.class);
-        when(tx.run(anyString(), any(Map.class))).thenReturn(mock(Result.class));
         captor.getValue().accept(tx);
 
-        verify(tx).run(anyString(), any(Map.class));
+        verify(tx, times(2)).run(anyString(), any(Value.class));
     }
 
     @Test

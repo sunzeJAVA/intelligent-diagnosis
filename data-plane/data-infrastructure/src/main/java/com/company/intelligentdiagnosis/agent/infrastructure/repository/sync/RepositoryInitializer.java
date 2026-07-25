@@ -11,17 +11,37 @@ import org.springframework.stereotype.Component;
 
 import java.util.concurrent.Executors;
 
+/**
+ * 仓库初始化器
+ * 在应用启动时执行仓库初始同步
+ */
 @Component
 public class RepositoryInitializer implements ApplicationRunner {
 
     private static final Logger log = LoggerFactory.getLogger(RepositoryInitializer.class);
 
+    /**
+     * 是否启用初始同步
+     */
     @Value("${repository.initial-sync.enabled:false}")
     private boolean enabled;
 
+    /**
+     * 仓库配置仓库
+     */
     private final RepositoryConfigRepository configRepository;
+
+    /**
+     * Git 同步服务
+     */
     private final GitSyncService gitSyncService;
 
+    /**
+     * 创建实例
+     *
+     * @param configRepository 仓库配置仓库
+     * @param gitSyncService   Git 同步服务
+     */
     public RepositoryInitializer(RepositoryConfigRepository configRepository,
                                  GitSyncService gitSyncService) {
         this.configRepository = configRepository;
@@ -52,6 +72,12 @@ public class RepositoryInitializer implements ApplicationRunner {
         log.info("Initial sync submissions completed");
     }
 
+    /**
+     * 安全同步单个仓库
+     * 捕获异常并记录日志，不影响其他仓库的同步
+     *
+     * @param config 仓库配置
+     */
     private void syncSafely(com.company.intelligentdiagnosis.agent.infrastructure.repository.config.RepositoryConfigEntity config) {
         try {
             gitSyncService.sync(config, TriggerType.INITIAL, "system");

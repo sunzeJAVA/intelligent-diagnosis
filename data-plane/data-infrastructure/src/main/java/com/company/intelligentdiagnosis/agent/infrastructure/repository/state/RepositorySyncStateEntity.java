@@ -13,6 +13,10 @@ import jakarta.persistence.Table;
 
 import java.time.Instant;
 
+/**
+ * 仓库同步状态实体
+ * 记录仓库同步的历史和状态信息
+ */
 @Entity
 @Table(name = "repository_sync_state")
 public class RepositorySyncStateEntity {

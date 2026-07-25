@@ -11,16 +11,31 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+/**
+ * 代码解析 API 控制器
+ * 提供代码解析和索引操作接口
+ */
 @RestController
 @RequestMapping("/api/data/parse")
 public class ParseController {
 
     private final ParseApplicationService parseApplicationService;
 
+    /**
+     * 创建实例
+     *
+     * @param parseApplicationService 解析应用服务
+     */
     public ParseController(ParseApplicationService parseApplicationService) {
         this.parseApplicationService = parseApplicationService;
     }
 
+    /**
+     * 解析代码并建立索引
+     *
+     * @param request 解析请求
+     * @return 解析出的代码元素列表
+     */
     @PostMapping
     public ResponseEntity<List<CodeElementDto>> parse(@RequestBody ParseRequestDto request) {
         ParseCommand command = new ParseCommand(

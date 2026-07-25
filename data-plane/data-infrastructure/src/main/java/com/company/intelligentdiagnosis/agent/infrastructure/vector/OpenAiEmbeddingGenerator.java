@@ -7,13 +7,30 @@ import org.springframework.web.client.RestClient;
 
 import java.util.List;
 
+/**
+ * 基于 OpenAI API 的嵌入生成器
+ * 调用 OpenAI 风格的嵌入 API 生成向量表示
+ */
 @Component
 @ConditionalOnProperty(name = "embedding.provider", havingValue = "openai")
 public class OpenAiEmbeddingGenerator implements EmbeddingGenerator {
 
+    /**
+     * REST 客户端
+     */
     private final RestClient restClient;
+
+    /**
+     * 嵌入配置属性
+     */
     private final EmbeddingProperties embeddingProperties;
 
+    /**
+     * 创建实例
+     *
+     * @param llmProperties       LLM 配置属性（用于获取 API Key 和 Base URL）
+     * @param embeddingProperties 嵌入配置属性
+     */
     public OpenAiEmbeddingGenerator(LlmProperties llmProperties, EmbeddingProperties embeddingProperties) {
         this.restClient = RestClient.builder()
             .baseUrl(llmProperties.getBaseUrl())
@@ -52,11 +69,39 @@ public class OpenAiEmbeddingGenerator implements EmbeddingGenerator {
         return embeddingProperties.getOpenai().getDimension();
     }
 
-    public record EmbeddingRequest(String input, String model) {
+    /**
+     * 嵌入请求
+     */
+    public record EmbeddingRequest(
+        /**
+         * 输入文本
+         */
+        String input,
+        /**
+         * 模型名称
+         */
+        String model
+    ) {
     }
 
-    public record EmbeddingResponse(List<Embedding> data) {
-        public record Embedding(List<Double> embedding) {
+    /**
+     * 嵌入响应
+     */
+    public record EmbeddingResponse(
+        /**
+         * 嵌入数据列表
+         */
+        List<Embedding> data
+    ) {
+        /**
+         * 嵌入数据
+         */
+        public record Embedding(
+            /**
+             * 向量表示
+             */
+            List<Double> embedding
+        ) {
         }
     }
 }

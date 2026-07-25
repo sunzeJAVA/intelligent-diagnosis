@@ -7,6 +7,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+/**
+ * 日志诊断审计器
+ * 通过日志记录诊断请求和响应信息
+ */
 @Component
 public class LoggingDiagnosisAuditor implements DiagnosisAuditor {
 

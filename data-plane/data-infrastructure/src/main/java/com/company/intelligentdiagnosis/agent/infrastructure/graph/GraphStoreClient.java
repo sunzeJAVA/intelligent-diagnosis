@@ -12,6 +12,10 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Neo4j 图存储客户端
+ * 负责代码元素关系图的构建和管理
+ */
 @Component
 public class GraphStoreClient {
 
@@ -19,10 +23,23 @@ public class GraphStoreClient {
 
     private final Driver driver;
 
+    /**
+     * 构造函数
+     *
+     * @param driver Neo4j 驱动
+     */
     public GraphStoreClient(Driver driver) {
         this.driver = driver;
     }
 
+    /**
+     * 构建代码关系图
+     * 将代码元素及其关系存储到 Neo4j
+     *
+     * @param repository 仓库名称
+     * @param commitHash 提交哈希
+     * @param elements   代码元素列表
+     */
     public void buildGraph(String repository, String commitHash, List<CodeElement> elements) {
         if (elements.isEmpty()) {
             return;
@@ -71,6 +88,11 @@ public class GraphStoreClient {
             repository, elements.size(), relationParams.size());
     }
 
+    /**
+     * 删除指定仓库的图数据
+     *
+     * @param repository 仓库名称
+     */
     public void deleteByRepository(String repository) {
         try (Session session = driver.session()) {
             session.executeWriteWithoutResult(tx -> tx.run("""
@@ -82,6 +104,14 @@ public class GraphStoreClient {
         log.info("Deleted Neo4j graph for repository {}", repository);
     }
 
+    /**
+     * 将代码元素转换为节点参数
+     *
+     * @param repository  仓库名称
+     * @param commitHash  提交哈希
+     * @param element     代码元素
+     * @return 节点参数映射
+     */
     private Map<String, Object> toNodeParameters(String repository, String commitHash, CodeElement element) {
         return Map.ofEntries(
             Map.entry("id", element.id()),
@@ -99,6 +129,13 @@ public class GraphStoreClient {
         );
     }
 
+    /**
+     * 将关系转换为关系参数
+     *
+     * @param sourceId 源元素 ID
+     * @param relation 关系
+     * @return 关系参数映射
+     */
     private Map<String, Object> toRelationParameters(String sourceId, Relation relation) {
         return Map.of(
             "sourceId", sourceId,
@@ -107,6 +144,12 @@ public class GraphStoreClient {
         );
     }
 
+    /**
+     * 空字符串处理
+     *
+     * @param value 字符串值
+     * @return 非空字符串
+     */
     private String nullToEmpty(String value) {
         return value != null ? value : "";
     }

@@ -4,6 +4,10 @@ import com.company.intelligentdiagnosis.agent.domain.llm.LlmClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Mock LLM 客户端实现
+ * 返回固定的模拟响应，用于开发和测试环境
+ */
 public class MockDiagnosisLlmClient implements LlmClient {
 
     private static final Logger log = LoggerFactory.getLogger(MockDiagnosisLlmClient.class);

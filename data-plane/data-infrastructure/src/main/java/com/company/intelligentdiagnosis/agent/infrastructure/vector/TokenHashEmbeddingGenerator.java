@@ -9,18 +9,36 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
+/**
+ * 基于 Token 哈希的嵌入生成器
+ * 使用 SHA-256 哈希将文本中的 token 映射到向量空间，适合本地离线使用
+ */
 @Component
 @ConditionalOnProperty(name = "embedding.provider", havingValue = "token-hash", matchIfMissing = true)
 public class TokenHashEmbeddingGenerator implements EmbeddingGenerator {
 
+    /**
+     * Token 匹配正则表达式：标识符模式
+     */
     private static final Pattern TOKEN_PATTERN = Pattern.compile("[A-Za-z_][A-Za-z0-9_]*");
 
+    /**
+     * 向量维度
+     */
     private final int dimension;
 
+    /**
+     * 使用默认维度 384 创建实例
+     */
     public TokenHashEmbeddingGenerator() {
         this(384);
     }
 
+    /**
+     * 创建指定维度的实例
+     *
+     * @param dimension 向量维度
+     */
     public TokenHashEmbeddingGenerator(int dimension) {
         this.dimension = dimension;
     }
@@ -49,6 +67,12 @@ public class TokenHashEmbeddingGenerator implements EmbeddingGenerator {
         return dimension;
     }
 
+    /**
+     * 将 token 映射到向量的某个维度
+     *
+     * @param token 输入 token
+     * @return 维度索引
+     */
     private int bucketFor(String token) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
@@ -63,6 +87,12 @@ public class TokenHashEmbeddingGenerator implements EmbeddingGenerator {
         }
     }
 
+    /**
+     * 归一化向量，使其长度为 1
+     *
+     * @param vector 输入向量
+     * @return 归一化后的向量
+     */
     private float[] normalize(float[] vector) {
         float sumSquares = 0.0f;
         for (float value : vector) {

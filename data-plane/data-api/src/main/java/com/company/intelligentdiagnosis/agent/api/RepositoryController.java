@@ -20,16 +20,30 @@ import org.springframework.web.bind.annotation.RestController;
 import java.net.URI;
 import java.util.List;
 
+/**
+ * 仓库管理 API 控制器
+ * 提供代码仓库的 CRUD 和同步操作接口
+ */
 @RestController
 @RequestMapping("/api/data/repositories")
 public class RepositoryController {
 
     private final RepositoryApplicationService repositoryApplicationService;
 
+    /**
+     * 创建实例
+     *
+     * @param repositoryApplicationService 仓库应用服务
+     */
     public RepositoryController(RepositoryApplicationService repositoryApplicationService) {
         this.repositoryApplicationService = repositoryApplicationService;
     }
 
+    /**
+     * 查询仓库列表
+     *
+     * @return 仓库列表
+     */
     @GetMapping
     public ResponseEntity<List<RepositoryDto>> listRepositories() {
         List<RepositoryDto> result = repositoryApplicationService.listRepositories().stream()
@@ -38,11 +52,23 @@ public class RepositoryController {
         return ResponseEntity.ok(result);
     }
 
+    /**
+     * 查询单个仓库
+     *
+     * @param id 仓库 ID
+     * @return 仓库详情
+     */
     @GetMapping("/{id}")
     public ResponseEntity<RepositoryDto> getRepository(@PathVariable String id) {
         return ResponseEntity.ok(toDto(repositoryApplicationService.getRepository(id)));
     }
 
+    /**
+     * 创建仓库配置
+     *
+     * @param request 创建请求
+     * @return 创建的仓库详情
+     */
     @PostMapping
     public ResponseEntity<RepositoryDto> createRepository(@RequestBody CreateRepositoryRequest request) {
         RepositoryConfigEntity entity = repositoryApplicationService.createRepository(toCommand(request));
@@ -50,23 +76,48 @@ public class RepositoryController {
             .body(toDto(entity));
     }
 
+    /**
+     * 更新仓库配置
+     *
+     * @param id      仓库 ID
+     * @param request 更新请求
+     * @return 更新后的仓库详情
+     */
     @PutMapping("/{id}")
     public ResponseEntity<RepositoryDto> updateRepository(@PathVariable String id,
                                                           @RequestBody UpdateRepositoryRequest request) {
         return ResponseEntity.ok(toDto(repositoryApplicationService.updateRepository(id, toCommand(request))));
     }
 
+    /**
+     * 删除仓库配置
+     *
+     * @param id 仓库 ID
+     * @return 无内容响应
+     */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteRepository(@PathVariable String id) {
         repositoryApplicationService.deleteRepository(id);
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * 手动触发仓库同步
+     *
+     * @param id 仓库 ID
+     * @return 同步状态
+     */
     @PostMapping("/{id}/sync")
     public ResponseEntity<SyncStateDto> syncRepository(@PathVariable String id) {
         return ResponseEntity.ok(toDto(repositoryApplicationService.syncRepository(id, "admin")));
     }
 
+    /**
+     * 查询仓库同步历史
+     *
+     * @param id 仓库 ID
+     * @return 同步历史列表
+     */
     @GetMapping("/{id}/sync-history")
     public ResponseEntity<List<SyncStateDto>> getSyncHistory(@PathVariable String id) {
         List<SyncStateDto> result = repositoryApplicationService.getSyncHistory(id).stream()
