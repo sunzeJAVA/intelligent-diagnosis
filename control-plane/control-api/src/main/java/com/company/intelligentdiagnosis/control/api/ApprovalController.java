@@ -1,25 +1,41 @@
 package com.company.intelligentdiagnosis.control.api;
 
+import com.company.intelligentdiagnosis.control.application.ApprovalApplicationService;
+import com.company.intelligentdiagnosis.control.domain.workflow.WorkflowInfo;
+import com.company.intelligentdiagnosis.control.domain.workflow.WorkflowService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/control/approvals")
 public class ApprovalController {
 
+    private final ApprovalApplicationService approvalApplicationService;
+    private final WorkflowService workflowService;
+
+    public ApprovalController(ApprovalApplicationService approvalApplicationService,
+                             WorkflowService workflowService) {
+        this.approvalApplicationService = approvalApplicationService;
+        this.workflowService = workflowService;
+    }
+
     @GetMapping
     public ResponseEntity<List<ApprovalDto>> listPending() {
-        // TODO: 调用 application service
-        return ResponseEntity.ok(List.of());
+        List<ApprovalDto> result = workflowService.listWorkflows().stream()
+            .filter(w -> "AWAITING_APPROVAL".equals(w.status()))
+            .map(this::toDto)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(result);
     }
 
     @PostMapping("/{workflowId}/approve")
     public ResponseEntity<Void> approve(
             @PathVariable String workflowId,
             @RequestBody ApprovalRequest request) {
-        // TODO: 发送 Temporal signal
+        approvalApplicationService.approve(workflowId, request.approver(), request.comment());
         return ResponseEntity.ok().build();
     }
 
@@ -27,8 +43,18 @@ public class ApprovalController {
     public ResponseEntity<Void> reject(
             @PathVariable String workflowId,
             @RequestBody RejectionRequest request) {
-        // TODO: 发送 Temporal signal
+        approvalApplicationService.reject(workflowId, request.reason());
         return ResponseEntity.ok().build();
+    }
+
+    private ApprovalDto toDto(WorkflowInfo info) {
+        return new ApprovalDto(
+            info.workflowId(),
+            info.repositoryName(),
+            info.commitHash(),
+            null,
+            info.status()
+        );
     }
 
     public record ApprovalDto(

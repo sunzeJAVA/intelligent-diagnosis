@@ -169,7 +169,7 @@ import { useTheme } from '@/composables/useTheme'
 
 const route = useRoute()
 const sidebarOpen = ref(false)
-const { theme, isDark, cycleTheme } = useTheme()
+const { theme, cycleTheme } = useTheme()
 
 const navItems = [
   { path: '/', label: '智能诊断', icon: Activity },

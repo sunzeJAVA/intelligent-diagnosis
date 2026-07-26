@@ -45,7 +45,7 @@
       <div v-else class="space-y-4">
         <div
           v-for="approval in filteredApprovals"
-          :key="approval.id"
+          :key="approval.workflowId"
           class="card dark:card-dark p-5 hover:shadow-elevated dark:hover:shadow-dark-elevated transition-shadow duration-300 animate-slide-up"
         >
           <!-- Header -->
@@ -58,57 +58,43 @@
                 <component :is="riskConfig[approval.riskLevel].icon" class="h-5 w-5" :class="riskConfig[approval.riskLevel].text" />
               </div>
               <div>
-                <h3 class="font-semibold text-dark-800 dark:text-white">{{ approval.operationType }}</h3>
+                <h3 class="font-semibold text-dark-800 dark:text-white">代码索引更新</h3>
                 <div class="flex items-center gap-2 mt-0.5">
                   <span :class="riskConfig[approval.riskLevel].badge">{{ approval.riskLevel }}</span>
                   <span :class="statusConfig[approval.status].badge">{{ statusConfig[approval.status].label }}</span>
                 </div>
               </div>
             </div>
-            <span class="text-xs text-dark-400 dark:text-dark-500">{{ formatTime(approval.createdAt) }}</span>
+            <span class="text-xs text-dark-400 dark:text-dark-500">{{ approval.workflowId.substring(0, 12) }}</span>
           </div>
 
           <!-- Details -->
           <div class="rounded-lg bg-dark-50 dark:bg-dark-800 p-3 mb-3 space-y-1.5 text-sm">
             <div class="flex items-center gap-2">
               <span class="text-dark-400 dark:text-dark-500 w-20 flex-shrink-0">仓库</span>
-              <span class="font-mono text-dark-700 dark:text-dark-200">{{ approval.requestData.repositoryName || '-' }}</span>
+              <span class="font-mono text-dark-700 dark:text-dark-200">{{ approval.repository || '-' }}</span>
             </div>
-            <div v-if="approval.requestData.commitId" class="flex items-center gap-2">
+            <div v-if="approval.commitHash" class="flex items-center gap-2">
               <span class="text-dark-400 dark:text-dark-500 w-20 flex-shrink-0">Commit</span>
-              <span class="font-mono text-dark-700 dark:text-dark-200">{{ approval.requestData.commitId.substring(0, 12) }}</span>
+              <span class="font-mono text-dark-700 dark:text-dark-200">{{ approval.commitHash.substring(0, 12) }}</span>
             </div>
-            <div v-if="approval.requestData.changedFiles !== undefined" class="flex items-center gap-2">
-              <span class="text-dark-400 dark:text-dark-500 w-20 flex-shrink-0">变更文件</span>
-              <span class="text-dark-700 dark:text-dark-200">{{ approval.requestData.changedFiles }} 个</span>
-            </div>
-            <div v-if="approval.requestData.description" class="flex items-start gap-2">
-              <span class="text-dark-400 dark:text-dark-500 w-20 flex-shrink-0">描述</span>
-              <span class="text-dark-700 dark:text-dark-200">{{ approval.requestData.description }}</span>
-            </div>
-          </div>
-
-          <!-- Reviewer -->
-          <div v-if="approval.status !== 'PENDING'" class="flex items-center gap-2 text-xs text-dark-500 dark:text-dark-400 mb-3">
-            <User class="h-3.5 w-3.5" />
-            <span>{{ approval.reviewerId || '系统' }} 审批于 {{ formatTime(approval.reviewedAt) }}</span>
           </div>
 
           <!-- Actions -->
           <div v-if="approval.status === 'PENDING'" class="flex gap-2">
-            <button @click="handleApprove(approval.id!)" class="btn-success btn-sm flex-1">
+            <button @click="handleApprove(approval.workflowId)" class="btn-success btn-sm flex-1">
               <Check class="h-4 w-4" />
               批准
             </button>
-            <button @click="handleReject(approval.id!)" class="btn-danger btn-sm flex-1">
+            <button @click="handleReject(approval.workflowId)" class="btn-danger btn-sm flex-1">
               <X class="h-4 w-4" />
               拒绝
             </button>
           </div>
 
           <!-- Reason for rejection -->
-          <div v-if="approval.status === 'REJECTED' && approval.reviewComment" class="rounded-lg bg-red-50 dark:bg-red-600/10 p-3 mt-2">
-            <p class="text-xs text-red-600 dark:text-red-400">{{ approval.reviewComment }}</p>
+          <div v-if="approval.status === 'REJECTED'" class="rounded-lg bg-red-50 dark:bg-red-600/10 p-3 mt-2">
+            <p class="text-xs text-red-600 dark:text-red-400">该审批已被拒绝</p>
           </div>
         </div>
       </div>
@@ -117,31 +103,14 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import { controlApi } from '@/api/client'
 import {
-  Loader2, Check, X, User, ShieldAlert, ShieldCheck,
+  Loader2, Check, X, ShieldAlert, ShieldCheck,
   ShieldX
 } from 'lucide-vue-next'
+import type { ApprovalDto } from '@/api/approval'
+import { listPendingApprovals, approveWorkflow, rejectWorkflow } from '@/api/approval'
 
-interface ApprovalRequest {
-  id?: string
-  operationType: string
-  riskLevel: string
-  status: string
-  reviewerId?: string
-  reviewedAt?: string
-  createdAt?: string
-  reviewComment?: string
-  requestData: {
-    repositoryName?: string
-    commitId?: string
-    changedFiles?: number
-    description?: string
-    [key: string]: unknown
-  }
-}
-
-const approvals = ref<ApprovalRequest[]>([])
+const approvals = ref<ApprovalDto[]>([])
 const loading = ref(false)
 const activeTab = ref('PENDING')
 
@@ -162,7 +131,6 @@ const statusConfig: Record<string, { label: string; badge: string }> = {
   PENDING: { label: '待审批', badge: 'badge badge-warning' },
   APPROVED: { label: '已批准', badge: 'badge badge-success' },
   REJECTED: { label: '已拒绝', badge: 'badge badge-danger' },
-  EXPIRED: { label: '已过期', badge: 'badge badge-info' },
 }
 
 const filteredApprovals = computed(() => {
@@ -170,24 +138,15 @@ const filteredApprovals = computed(() => {
   return approvals.value.filter(a => a.status === activeTab.value)
 })
 
-/**
- * 获取指定状态的审批请求数量
- * @param status - 审批状态（PENDING/APPROVED/REJECTED/ALL）
- * @returns 该状态的审批请求数量
- */
 function getCountByStatus(status: string): number {
   if (status === 'ALL') return approvals.value.length
   return approvals.value.filter(a => a.status === status).length
 }
 
-/**
- * 加载审批请求列表
- */
 async function loadApprovals() {
   loading.value = true
   try {
-    const response = await controlApi.get<ApprovalRequest[]>('/approvals')
-    approvals.value = response.data
+    approvals.value = await listPendingApprovals()
   } catch {
     approvals.value = []
   } finally {
@@ -195,34 +154,16 @@ async function loadApprovals() {
   }
 }
 
-/**
- * 批准指定审批请求
- * @param id - 审批请求 ID
- */
-async function handleApprove(id: string) {
-  await controlApi.post(`/approvals/${id}/approve`)
+async function handleApprove(workflowId: string) {
+  await approveWorkflow(workflowId, { approver: 'admin', comment: '批准' })
   await loadApprovals()
 }
 
-/**
- * 拒绝指定审批请求（需输入原因）
- * @param id - 审批请求 ID
- */
-async function handleReject(id: string) {
+async function handleReject(workflowId: string) {
   const reason = prompt('请输入拒绝原因')
   if (reason === null) return
-  await controlApi.post(`/approvals/${id}/reject`, { reason })
+  await rejectWorkflow(workflowId, { reason })
   await loadApprovals()
-}
-
-/**
- * 格式化时间戳为可读字符串
- * @param time - 时间字符串（ISO 格式）
- * @returns 格式化后的时间字符串，无时间时返回 '-'
- */
-function formatTime(time?: string): string {
-  if (!time) return '-'
-  return new Date(time).toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
 }
 
 onMounted(loadApprovals)

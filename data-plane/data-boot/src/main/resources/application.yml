@@ -96,6 +96,10 @@ repository:
   sync:
     timeout-seconds: 600
 
+temporal:
+  host: ${TEMPORAL_HOST:localhost}
+  port: ${TEMPORAL_PORT:7233}
+
 logging:
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%X{traceId}] %-5level %logger{36} - %msg%n"

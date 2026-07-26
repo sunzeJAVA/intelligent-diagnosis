@@ -32,6 +32,7 @@
         <qdrant-client.version>1.11.0</qdrant-client.version>
         <neo4j-driver.version>5.25.0</neo4j-driver.version>
         <jgit.version>6.10.0.202406032230-r</jgit.version>
+        <temporal.version>1.26.0</temporal.version>
     </properties>
 
     <dependencyManagement>
@@ -78,6 +79,17 @@
                 <groupId>org.eclipse.jgit</groupId>
                 <artifactId>org.eclipse.jgit.ssh.apache</artifactId>
                 <version>${jgit.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.temporal</groupId>
+                <artifactId>temporal-sdk</artifactId>
+                <version>${temporal.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.temporal</groupId>
+                <artifactId>temporal-spring-boot-starter</artifactId>
+                <version>${temporal.version}</version>
             </dependency>
 
             <dependency>

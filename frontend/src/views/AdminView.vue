@@ -153,21 +153,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { controlApi } from '@/api/client'
 import {
   Database, Share2, Link, Activity, Code, Server, Network,
   Cpu, Pencil, Settings, Brain, Zap
 } from 'lucide-vue-next'
 
-const infrastructures = ref([
-  { name: 'PostgreSQL', type: '元数据存储', url: 'localhost:5432', connected: true, latency: 2, version: '16.2', icon: Database },
-  { name: 'Qdrant', type: '向量数据库', url: 'localhost:6333', connected: true, latency: 5, version: '1.10.0', icon: Database },
-  { name: 'Neo4j', type: '图数据库', url: 'localhost:7687', connected: true, latency: 8, version: '5.20.0', icon: Network },
-  { name: 'Temporal', type: '工作流引擎', url: 'localhost:7233', connected: true, latency: 3, version: '1.23.0', icon: Server },
-  { name: 'LLM Gateway', type: 'AI 模型', url: 'api.openai.com', connected: true, latency: 120, version: 'gpt-4o', icon: Brain },
-  { name: 'Redis', type: '缓存', url: 'localhost:6379', connected: false, latency: 0, version: '-', icon: Zap },
-])
+const infrastructureIcons: Record<string, any> = {
+  PostgreSQL: Database,
+  Qdrant: Database,
+  Neo4j: Network,
+  Temporal: Server,
+  Redis: Zap,
+}
+
+const infrastructures = ref<{ name: string; type: string; url: string; connected: boolean; latency: number; version: string; icon: any }[]>([])
 
 const workers = ref([
   { name: 'java-parser', language: 'Java 21', address: 'localhost:9093', healthy: true },
@@ -200,10 +201,6 @@ function formatNumber(n: number): string {
   return n.toLocaleString()
 }
 
-/**
- * 加载系统指标数据
- * 失败时使用 mock 数据
- */
 async function loadMetrics() {
   try {
     const response = await controlApi.get<typeof metrics.value>('/admin/metrics')
@@ -213,5 +210,38 @@ async function loadMetrics() {
   }
 }
 
-onMounted(loadMetrics)
+async function loadInfrastructures() {
+  try {
+    const response = await controlApi.get<{ name: string; type: string; url: string; connected: boolean; latency: number; version: string }[]>('/admin/infrastructures')
+    infrastructures.value = response.data.map(item => ({
+      ...item,
+      icon: infrastructureIcons[item.name] || Database
+    }))
+  } catch {
+    infrastructures.value = [
+      { name: 'PostgreSQL', type: '元数据存储', url: 'localhost:5432', connected: false, latency: 0, version: '-', icon: Database },
+      { name: 'Qdrant', type: '向量数据库', url: 'localhost:6333', connected: false, latency: 0, version: '-', icon: Database },
+      { name: 'Neo4j', type: '图数据库', url: 'localhost:7687', connected: false, latency: 0, version: '-', icon: Network },
+      { name: 'Temporal', type: '工作流引擎', url: 'localhost:7233', connected: false, latency: 0, version: '-', icon: Server },
+      { name: 'Redis', type: '缓存', url: 'localhost:6379', connected: false, latency: 0, version: '-', icon: Zap },
+    ]
+  }
+}
+
+async function refreshAll() {
+  await loadMetrics()
+  await loadInfrastructures()
+}
+
+let refreshTimer: ReturnType<typeof setInterval>
+
+onMounted(() => {
+  loadMetrics()
+  loadInfrastructures()
+  refreshTimer = setInterval(refreshAll, 30000)
+})
+
+onUnmounted(() => {
+  clearInterval(refreshTimer)
+})
 </script>

@@ -18,5 +18,10 @@
             <groupId>com.company.intelligentdiagnosis</groupId>
             <artifactId>data-common</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>io.temporal</groupId>
+            <artifactId>temporal-sdk</artifactId>
+        </dependency>
     </dependencies>
 </project>
