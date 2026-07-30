@@ -108,3 +108,4 @@ cd frontend && pnpm install && pnpm dev
 ## 文档
 
 - [架构设计文档](/Users/sunze/git/intelligent-diagnosis/docs/智能代码诊断系统_架构文档_v2.1_受控工程.md)
+- [项目进度跟踪](/Users/sunze/git/intelligent-diagnosis/docs/project-progress.md)
