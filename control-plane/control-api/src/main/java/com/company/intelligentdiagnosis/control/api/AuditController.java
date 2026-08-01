@@ -3,6 +3,7 @@ package com.company.intelligentdiagnosis.control.api;
 import com.company.intelligentdiagnosis.control.domain.audit.AuditEntry;
 import com.company.intelligentdiagnosis.control.domain.audit.AuditService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,6 +24,7 @@ public class AuditController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('audit:read')")
     public ResponseEntity<List<AuditDto>> listAudits(
         @RequestParam(required = false) String resource,
         @RequestParam(required = false) String userId
@@ -39,6 +41,7 @@ public class AuditController {
     }
 
     @GetMapping("/{auditId}/integrity")
+    @PreAuthorize("hasAuthority('audit:read')")
     public ResponseEntity<IntegrityDto> verifyIntegrity(@PathVariable String auditId) {
         boolean valid = auditService.verifyIntegrity(auditId);
         return ResponseEntity.ok(new IntegrityDto(auditId, valid));

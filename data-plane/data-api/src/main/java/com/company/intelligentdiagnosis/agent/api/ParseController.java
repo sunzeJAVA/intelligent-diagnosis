@@ -5,6 +5,7 @@ import com.company.intelligentdiagnosis.agent.domain.CodeElement;
 import com.company.intelligentdiagnosis.agent.domain.parse.ParseCommand;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -38,6 +39,7 @@ public class ParseController {
      * @return 解析出的代码元素列表
      */
     @PostMapping
+    @PreAuthorize("hasAuthority('repository:write')")
     @RateLimiter(name = "parse-api")
     public ResponseEntity<List<CodeElementDto>> parse(@RequestBody ParseRequestDto request) {
         ParseCommand command = new ParseCommand(

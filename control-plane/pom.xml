@@ -83,6 +83,11 @@
                 <artifactId>control-application</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.company.intelligentdiagnosis</groupId>
+                <artifactId>shared-security</artifactId>
+                <version>${project.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 

@@ -26,5 +26,9 @@
             <groupId>io.github.resilience4j</groupId>
             <artifactId>resilience4j-annotations</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.company.intelligentdiagnosis</groupId>
+            <artifactId>shared-security</artifactId>
+        </dependency>
     </dependencies>
 </project>

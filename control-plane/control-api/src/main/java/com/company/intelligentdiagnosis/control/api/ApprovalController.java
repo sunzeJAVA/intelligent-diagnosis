@@ -4,6 +4,7 @@ import com.company.intelligentdiagnosis.control.application.ApprovalApplicationS
 import com.company.intelligentdiagnosis.control.domain.workflow.WorkflowInfo;
 import com.company.intelligentdiagnosis.control.domain.workflow.WorkflowService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,6 +24,7 @@ public class ApprovalController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('approval:read')")
     public ResponseEntity<List<ApprovalDto>> listPending() {
         List<ApprovalDto> result = workflowService.listWorkflows().stream()
             .filter(w -> "AWAITING_APPROVAL".equals(w.status()))
@@ -32,6 +34,7 @@ public class ApprovalController {
     }
 
     @PostMapping("/{workflowId}/approve")
+    @PreAuthorize("hasAuthority('approval:write')")
     public ResponseEntity<Void> approve(
             @PathVariable String workflowId,
             @RequestBody ApprovalRequest request) {
@@ -40,6 +43,7 @@ public class ApprovalController {
     }
 
     @PostMapping("/{workflowId}/reject")
+    @PreAuthorize("hasAuthority('approval:write')")
     public ResponseEntity<Void> reject(
             @PathVariable String workflowId,
             @RequestBody RejectionRequest request) {

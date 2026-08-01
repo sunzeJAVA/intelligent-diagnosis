@@ -2,6 +2,7 @@ package com.company.intelligentdiagnosis.control.api;
 
 import com.company.intelligentdiagnosis.control.infrastructure.health.HealthCheckService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,6 +20,7 @@ public class AdminController {
     }
 
     @GetMapping("/metrics")
+    @PreAuthorize("hasAuthority('admin:read')")
     public ResponseEntity<MetricsDto> getMetrics() {
         MetricsDto metrics = new MetricsDto(
             15482L,
@@ -30,6 +32,7 @@ public class AdminController {
     }
 
     @GetMapping("/infrastructures")
+    @PreAuthorize("hasAuthority('admin:read')")
     public ResponseEntity<List<InfrastructureDto>> listInfrastructures() {
         List<HealthCheckService.InfrastructureHealth> healthList = healthCheckService.checkAll();
         List<InfrastructureDto> infrastructures = healthList.stream()
@@ -57,6 +60,7 @@ public class AdminController {
     }
 
     @GetMapping("/configurations")
+    @PreAuthorize("hasAuthority('admin:read')")
     public ResponseEntity<List<ConfigurationDto>> listConfigurations() {
         List<ConfigurationDto> configurations = List.of(
             new ConfigurationDto("diagnosis.llm.model", "LLM 模型", "gpt-4o"),
@@ -71,6 +75,7 @@ public class AdminController {
     }
 
     @PutMapping("/configurations/{key}")
+    @PreAuthorize("hasAuthority('admin:write')")
     public ResponseEntity<Void> updateConfiguration(
             @PathVariable String key,
             @RequestBody Map<String, String> body) {

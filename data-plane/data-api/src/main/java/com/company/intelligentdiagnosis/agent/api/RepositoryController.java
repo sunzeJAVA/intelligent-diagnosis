@@ -8,6 +8,7 @@ import com.company.intelligentdiagnosis.agent.infrastructure.repository.state.Re
 import com.company.intelligentdiagnosis.agent.application.RepositoryApplicationService.CreateRepositoryCommand;
 import com.company.intelligentdiagnosis.agent.application.RepositoryApplicationService.UpdateRepositoryCommand;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -45,6 +46,7 @@ public class RepositoryController {
      * @return 仓库列表
      */
     @GetMapping
+    @PreAuthorize("hasAuthority('repository:read')")
     public ResponseEntity<List<RepositoryDto>> listRepositories() {
         List<RepositoryDto> result = repositoryApplicationService.listRepositories().stream()
             .map(this::toDto)
@@ -59,6 +61,7 @@ public class RepositoryController {
      * @return 仓库详情
      */
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('repository:read')")
     public ResponseEntity<RepositoryDto> getRepository(@PathVariable String id) {
         return ResponseEntity.ok(toDto(repositoryApplicationService.getRepository(id)));
     }
@@ -70,6 +73,7 @@ public class RepositoryController {
      * @return 创建的仓库详情
      */
     @PostMapping
+    @PreAuthorize("hasAuthority('repository:write')")
     public ResponseEntity<RepositoryDto> createRepository(@RequestBody CreateRepositoryRequest request) {
         RepositoryConfigEntity entity = repositoryApplicationService.createRepository(toCommand(request));
         return ResponseEntity.created(URI.create("/api/data/repositories/" + entity.getId()))
@@ -84,6 +88,7 @@ public class RepositoryController {
      * @return 更新后的仓库详情
      */
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('repository:write')")
     public ResponseEntity<RepositoryDto> updateRepository(@PathVariable String id,
                                                           @RequestBody UpdateRepositoryRequest request) {
         return ResponseEntity.ok(toDto(repositoryApplicationService.updateRepository(id, toCommand(request))));
@@ -96,6 +101,7 @@ public class RepositoryController {
      * @return 无内容响应
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('repository:write')")
     public ResponseEntity<Void> deleteRepository(@PathVariable String id) {
         repositoryApplicationService.deleteRepository(id);
         return ResponseEntity.noContent().build();
@@ -108,6 +114,7 @@ public class RepositoryController {
      * @return 同步状态
      */
     @PostMapping("/{id}/sync")
+    @PreAuthorize("hasAuthority('repository:write')")
     public ResponseEntity<SyncStateDto> syncRepository(@PathVariable String id) {
         return ResponseEntity.ok(toDto(repositoryApplicationService.syncRepository(id, "admin")));
     }
@@ -119,6 +126,7 @@ public class RepositoryController {
      * @return 同步历史列表
      */
     @GetMapping("/{id}/sync-history")
+    @PreAuthorize("hasAuthority('repository:read')")
     public ResponseEntity<List<SyncStateDto>> getSyncHistory(@PathVariable String id) {
         List<SyncStateDto> result = repositoryApplicationService.getSyncHistory(id).stream()
             .map(this::toDto)

@@ -18,5 +18,9 @@
             <groupId>com.company.intelligentdiagnosis</groupId>
             <artifactId>control-common</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.company.intelligentdiagnosis</groupId>
+            <artifactId>shared-security</artifactId>
+        </dependency>
     </dependencies>
 </project>

@@ -5,6 +5,7 @@ import com.company.intelligentdiagnosis.agent.application.snapshot.SnapshotResto
 import com.company.intelligentdiagnosis.agent.domain.snapshot.IndexSnapshot;
 import com.company.intelligentdiagnosis.agent.domain.snapshot.SnapshotRepository;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -32,6 +33,7 @@ public class SnapshotController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('snapshot:read')")
     public ResponseEntity<List<SnapshotDto>> listSnapshots(@RequestParam String repository) {
         List<SnapshotDto> result = snapshotRepository.findByRepositoryNameOrderByCreatedAtDesc(repository).stream()
             .map(this::toDto)
@@ -40,6 +42,7 @@ public class SnapshotController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('snapshot:read')")
     public ResponseEntity<SnapshotDto> getSnapshot(@PathVariable String id) {
         return snapshotRepository.findById(id)
             .map(snapshot -> ResponseEntity.ok(toDto(snapshot)))
@@ -47,6 +50,7 @@ public class SnapshotController {
     }
 
     @GetMapping("/{leftId}/diff/{rightId}")
+    @PreAuthorize("hasAuthority('snapshot:read')")
     public ResponseEntity<SnapshotDiffService.SnapshotDiff> diff(
         @PathVariable String leftId,
         @PathVariable String rightId
@@ -55,6 +59,7 @@ public class SnapshotController {
     }
 
     @PostMapping("/{id}/rollback")
+    @PreAuthorize("hasAuthority('snapshot:rollback')")
     public ResponseEntity<Void> rollback(@PathVariable String id) {
         snapshotRestoreService.restoreSnapshot(id);
         return ResponseEntity.ok().build();
