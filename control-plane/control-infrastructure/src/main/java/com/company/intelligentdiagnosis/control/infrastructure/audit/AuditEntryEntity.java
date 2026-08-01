@@ -1,49 +1,71 @@
 package com.company.intelligentdiagnosis.control.infrastructure.audit;
 
-import jakarta.persistence.*;
+import com.company.intelligentdiagnosis.control.domain.audit.AuditAction;
+import com.company.intelligentdiagnosis.control.domain.audit.AuditResult;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
+import java.util.Map;
 
 @Entity
-@Table(name = "audit_entries")
+@Table(name = "audit_entry")
 public class AuditEntryEntity {
 
     @Id
+    @Column(name = "id", length = 64, nullable = false)
     private String id;
 
+    @Column(name = "trace_id", length = 64)
     private String traceId;
 
+    @Column(name = "user_id", length = 128, nullable = false)
     private String userId;
 
+    @Column(name = "tenant_id", length = 128, nullable = false)
     private String tenantId;
 
     @Enumerated(EnumType.STRING)
-    private com.company.intelligentdiagnosis.control.domain.audit.AuditAction action;
+    @Column(name = "action", length = 32, nullable = false)
+    private AuditAction action;
 
+    @Column(name = "resource", length = 128)
     private String resource;
 
+    @Column(name = "resource_id", length = 128)
     private String resourceId;
 
     @Enumerated(EnumType.STRING)
-    private com.company.intelligentdiagnosis.control.domain.audit.AuditResult result;
+    @Column(name = "result", length = 32)
+    private AuditResult result;
 
+    @Column(name = "reason", columnDefinition = "TEXT")
     private String reason;
 
-    @Column(columnDefinition = "jsonb")
-    private String context;
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "context", columnDefinition = "JSONB")
+    private Map<String, Object> context;
 
+    @Column(name = "ip_address", length = 64)
     private String ipAddress;
 
+    @Column(name = "user_agent", columnDefinition = "TEXT")
     private String userAgent;
 
+    @Column(name = "timestamp", nullable = false)
     private Instant timestamp;
 
+    @Column(name = "completed_at")
     private Instant completedAt;
 
+    @Column(name = "signature", length = 512)
     private String signature;
-
-    public AuditEntryEntity() {
-    }
 
     public String getId() {
         return id;
@@ -77,11 +99,11 @@ public class AuditEntryEntity {
         this.tenantId = tenantId;
     }
 
-    public com.company.intelligentdiagnosis.control.domain.audit.AuditAction getAction() {
+    public AuditAction getAction() {
         return action;
     }
 
-    public void setAction(com.company.intelligentdiagnosis.control.domain.audit.AuditAction action) {
+    public void setAction(AuditAction action) {
         this.action = action;
     }
 
@@ -101,11 +123,11 @@ public class AuditEntryEntity {
         this.resourceId = resourceId;
     }
 
-    public com.company.intelligentdiagnosis.control.domain.audit.AuditResult getResult() {
+    public AuditResult getResult() {
         return result;
     }
 
-    public void setResult(com.company.intelligentdiagnosis.control.domain.audit.AuditResult result) {
+    public void setResult(AuditResult result) {
         this.result = result;
     }
 
@@ -117,11 +139,11 @@ public class AuditEntryEntity {
         this.reason = reason;
     }
 
-    public String getContext() {
+    public Map<String, Object> getContext() {
         return context;
     }
 
-    public void setContext(String context) {
+    public void setContext(Map<String, Object> context) {
         this.context = context;
     }
 

@@ -24,6 +24,11 @@ public class QdrantProperties {
     private String collectionName = "code-elements";
 
     /**
+     * 沙箱集合名称，用于索引更新前的临时验证
+     */
+    private String sandboxCollectionName = "code-elements-sandbox";
+
+    /**
      * 如果集合不存在是否自动创建
      */
     private boolean createCollectionIfMissing = true;
@@ -50,6 +55,14 @@ public class QdrantProperties {
 
     public void setCollectionName(String collectionName) {
         this.collectionName = collectionName;
+    }
+
+    public String getSandboxCollectionName() {
+        return sandboxCollectionName;
+    }
+
+    public void setSandboxCollectionName(String sandboxCollectionName) {
+        this.sandboxCollectionName = sandboxCollectionName;
     }
 
     public boolean isCreateCollectionIfMissing() {

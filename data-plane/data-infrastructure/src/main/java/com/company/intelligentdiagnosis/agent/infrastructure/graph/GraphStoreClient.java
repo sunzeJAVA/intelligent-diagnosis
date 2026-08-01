@@ -33,17 +33,26 @@ public class GraphStoreClient {
     }
 
     /**
-     * 构建代码关系图
-     * 将代码元素及其关系存储到 Neo4j
-     *
-     * @param repository 仓库名称
-     * @param commitHash 提交哈希
-     * @param elements   代码元素列表
+     * 构建代码关系图到生产标签
      */
     public void buildGraph(String repository, String commitHash, List<CodeElement> elements) {
+        buildGraph(repository, commitHash, elements, false);
+    }
+
+    /**
+     * 构建代码关系图到沙箱标签
+     */
+    public void buildSandboxGraph(String repository, String commitHash, List<CodeElement> elements) {
+        buildGraph(repository, commitHash, elements, true);
+    }
+
+    private void buildGraph(String repository, String commitHash, List<CodeElement> elements, boolean sandbox) {
         if (elements.isEmpty()) {
             return;
         }
+
+        String nodeLabel = sandbox ? "CodeElementSandbox" : "CodeElement";
+        String relType = sandbox ? "SANDBOX_RELATES_TO" : "RELATES_TO";
 
         List<Map<String, Object>> nodeParams = elements.stream()
             .map(element -> toNodeParameters(repository, commitHash, element))
@@ -51,14 +60,14 @@ public class GraphStoreClient {
 
         List<Map<String, Object>> relationParams = elements.stream()
             .flatMap(element -> element.relations().stream()
-                .map(relation -> toRelationParameters(element.id(), relation)))
+                .map(relation -> toRelationParameters(repository, element.id(), relation)))
             .toList();
 
         try (Session session = driver.session()) {
             session.executeWriteWithoutResult(tx -> {
                 tx.run("""
                     UNWIND $nodes AS node
-                    MERGE (e:CodeElement {id: node.id})
+                    MERGE (e:%s {id: node.id})
                     SET e.repository = node.repository,
                         e.commitHash = node.commitHash,
                         e.kind = node.kind,
@@ -70,28 +79,57 @@ public class GraphStoreClient {
                         e.sourceCode = node.sourceCode,
                         e.documentation = node.documentation,
                         e.modifiers = node.modifiers
-                    """, Values.parameters("nodes", nodeParams));
+                    """.formatted(nodeLabel), Values.parameters("nodes", nodeParams));
 
                 if (!relationParams.isEmpty()) {
                     tx.run("""
                         UNWIND $relations AS rel
-                        MATCH (source:CodeElement {id: rel.sourceId})
-                        MATCH (target:CodeElement {id: rel.targetId})
-                        MERGE (source)-[r:RELATES_TO]->(target)
-                        SET r.kind = rel.kind
-                        """, Values.parameters("relations", relationParams));
+                        MATCH (source:%s {id: rel.sourceId})
+                        MATCH (target:%s {id: rel.targetId})
+                        MERGE (source)-[r:%s]->(target)
+                        SET r.kind = rel.kind, r.repository = rel.repository
+                        """.formatted(nodeLabel, nodeLabel, relType), Values.parameters("relations", relationParams));
                 }
             });
         }
 
-        log.info("Built Neo4j graph for repository {} ({} elements, {} relations)",
-            repository, elements.size(), relationParams.size());
+        log.info("Built Neo4j {} graph for repository {} ({} elements, {} relations)",
+            sandbox ? "sandbox" : "production", repository, elements.size(), relationParams.size());
     }
 
     /**
-     * 删除指定仓库的图数据
-     *
-     * @param repository 仓库名称
+     * 将沙箱图提升到生产图
+     */
+    public void promoteSandboxToProduction(String repository) {
+        try (Session session = driver.session()) {
+            session.executeWriteWithoutResult(tx -> {
+                tx.run("""
+                    MATCH (s:CodeElementSandbox {repository: $repository})
+                    MERGE (p:CodeElement {id: s.id})
+                    SET p = properties(s)
+                    REMOVE p:CodeElementSandbox
+                    """, Values.parameters("repository", repository));
+
+                tx.run("""
+                    MATCH (:CodeElementSandbox {repository: $repository})-[sr:SANDBOX_RELATES_TO]->(:CodeElementSandbox {repository: $repository})
+                    WITH sr, startNode(sr) AS src, endNode(sr) AS tgt
+                    MATCH (pSrc:CodeElement {id: src.id}), (pTgt:CodeElement {id: tgt.id})
+                    MERGE (pSrc)-[r:RELATES_TO]->(pTgt)
+                    SET r.kind = sr.kind, r.repository = sr.repository
+                    """, Values.parameters("repository", repository));
+
+                tx.run("""
+                    MATCH (s:CodeElementSandbox {repository: $repository})
+                    OPTIONAL MATCH (s)-[sr:SANDBOX_RELATES_TO]-()
+                    DELETE sr, s
+                    """, Values.parameters("repository", repository));
+            });
+        }
+        log.info("Promoted Neo4j sandbox graph to production for repository {}", repository);
+    }
+
+    /**
+     * 删除指定仓库的生产图数据
      */
     public void deleteByRepository(String repository) {
         try (Session session = driver.session()) {
@@ -102,6 +140,47 @@ public class GraphStoreClient {
                 """, Values.parameters("repository", repository)));
         }
         log.info("Deleted Neo4j graph for repository {}", repository);
+    }
+
+    /**
+     * 删除指定仓库的沙箱图数据
+     */
+    public void deleteSandboxByRepository(String repository) {
+        try (Session session = driver.session()) {
+            session.executeWriteWithoutResult(tx -> tx.run("""
+                MATCH (e:CodeElementSandbox {repository: $repository})
+                OPTIONAL MATCH (e)-[r]-()
+                DELETE r, e
+                """, Values.parameters("repository", repository)));
+        }
+        log.info("Deleted Neo4j sandbox graph for repository {}", repository);
+    }
+
+    /**
+     * 统计生产图中指定仓库的节点数
+     */
+    public long countNodes(String repository) {
+        try (Session session = driver.session()) {
+            return session.executeRead(tx -> tx.run("""
+                MATCH (e:CodeElement {repository: $repository})
+                RETURN count(e) AS count
+                """, Values.parameters("repository", repository))
+                .single().get("count").asLong());
+        }
+    }
+
+    /**
+     * 统计生产图中指定仓库的关系数
+     */
+    public long countRelations(String repository) {
+        try (Session session = driver.session()) {
+            return session.executeRead(tx -> tx.run("""
+                MATCH ()-[r:RELATES_TO]->()
+                WHERE r.repository = $repository
+                RETURN count(r) AS count
+                """, Values.parameters("repository", repository))
+                .single().get("count").asLong());
+        }
     }
 
     /**
@@ -136,8 +215,9 @@ public class GraphStoreClient {
      * @param relation 关系
      * @return 关系参数映射
      */
-    private Map<String, Object> toRelationParameters(String sourceId, Relation relation) {
+    private Map<String, Object> toRelationParameters(String repository, String sourceId, Relation relation) {
         return Map.of(
+            "repository", repository,
             "sourceId", sourceId,
             "targetId", relation.targetId(),
             "kind", relation.kind().name()

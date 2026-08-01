@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -39,10 +40,42 @@ public class TemporalWorkflowServiceImpl implements WorkflowService {
 
     @Override
     public WorkflowInfo getWorkflow(String workflowId) {
+        if (!isTemporalAvailable()) {
+            log.warn("Temporal not available, returning fallback workflow info for: {}", workflowId);
+            return fallbackWorkflowInfo(workflowId);
+        }
+
+        try {
+            WorkflowStub stub = workflowClient.newUntypedWorkflowStub(workflowId);
+            String status = stub.query("getStatus", String.class);
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> stepHistory = stub.query("getStepHistory", List.class);
+            String currentStep = stepHistory != null && !stepHistory.isEmpty()
+                ? String.valueOf(stepHistory.get(stepHistory.size() - 1).get("name"))
+                : null;
+
+            return new WorkflowInfo(
+                workflowId,
+                WORKFLOW_TYPE,
+                status,
+                currentStep,
+                Instant.now(),
+                null,
+                null,
+                null,
+                null
+            );
+        } catch (Exception e) {
+            log.warn("Failed to query workflow {}: {}", workflowId, e.getMessage());
+            return fallbackWorkflowInfo(workflowId);
+        }
+    }
+
+    private WorkflowInfo fallbackWorkflowInfo(String workflowId) {
         return new WorkflowInfo(
             workflowId,
             WORKFLOW_TYPE,
-            "RUNNING",
+            "UNKNOWN",
             null,
             Instant.now(),
             null,

@@ -4,6 +4,7 @@ import com.company.intelligentdiagnosis.agent.application.DiagnosisApplicationSe
 import com.company.intelligentdiagnosis.agent.domain.diagnosis.CodeSnippet;
 import com.company.intelligentdiagnosis.agent.domain.diagnosis.DiagnosisRequest;
 import com.company.intelligentdiagnosis.agent.domain.diagnosis.DiagnosisResponse;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +28,7 @@ public class DiagnosisController {
     }
 
     @PostMapping
+    @RateLimiter(name = "diagnosis-api")
     public ResponseEntity<ApiResponse<DiagnosisResponseDto>> diagnose(@RequestBody DiagnosisRequestDto request) {
         try {
             DiagnosisRequest domainRequest = new DiagnosisRequest(

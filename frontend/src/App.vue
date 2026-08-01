@@ -163,7 +163,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import {
   Stethoscope, Bell, Settings, Menu, Sun, Moon, Monitor,
-  Activity, GitBranch, ShieldCheck, Workflow, LayoutDashboard
+  Activity, GitBranch, ShieldCheck, Workflow, LayoutDashboard, Camera
 } from 'lucide-vue-next'
 import { useTheme } from '@/composables/useTheme'
 
@@ -176,6 +176,7 @@ const navItems = [
   { path: '/repositories', label: '仓库管理', icon: GitBranch },
   { path: '/approvals', label: '审批工作台', icon: ShieldCheck, badge: '3' },
   { path: '/workflows', label: '工作流监控', icon: Workflow },
+  { path: '/snapshots', label: '快照管理', icon: Camera },
   { path: '/admin', label: '系统管理', icon: LayoutDashboard },
 ]
 

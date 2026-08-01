@@ -7,6 +7,7 @@ import com.company.intelligentdiagnosis.control.domain.audit.AuditService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -15,8 +16,8 @@ import java.time.Instant;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Service
@@ -24,13 +25,19 @@ public class AuditServiceImpl implements AuditService {
 
     private static final Logger log = LoggerFactory.getLogger(AuditServiceImpl.class);
 
-    private final Map<String, AuditEntry> auditStore = new ConcurrentHashMap<>();
+    private final AuditEntryRepository auditEntryRepository;
+
+    public AuditServiceImpl(AuditEntryRepository auditEntryRepository) {
+        this.auditEntryRepository = auditEntryRepository;
+    }
 
     @Override
+    @Transactional
     public String startAudit(String action, String resource, String resourceId, Map<String, Object> context) {
         String auditId = UUID.randomUUID().toString();
-        String signature = signEntry(auditId, action, Instant.now(), resource);
-        
+        Instant timestamp = Instant.now();
+        String signature = signEntry(auditId, action, timestamp, resource);
+
         AuditEntry entry = new AuditEntry(
             auditId,
             null,
@@ -44,69 +51,88 @@ public class AuditServiceImpl implements AuditService {
             context,
             null,
             null,
-            Instant.now(),
+            timestamp,
             null,
             signature
         );
-        
-        auditStore.put(auditId, entry);
+
+        auditEntryRepository.save(AuditEntryMapper.toEntity(entry));
         log.debug("Started audit: {}", auditId);
 
         return auditId;
     }
 
     @Override
+    @Transactional
     public void completeAudit(String auditId, AuditResult result, String reason) {
         completeAudit(auditId, result, Map.of("reason", reason));
     }
 
     @Override
+    @Transactional
     public void completeAudit(String auditId, AuditResult result, Map<String, Object> details) {
-        auditStore.computeIfPresent(auditId, (id, entry) -> {
-            String signature = signEntry(id, entry.action().name(), entry.timestamp(), entry.resource());
-            return new AuditEntry(
-                id,
-                entry.traceId(),
-                entry.userId(),
-                entry.tenantId(),
-                entry.action(),
-                entry.resource(),
-                entry.resourceId(),
-                result,
-                details != null ? details.get("reason") != null ? details.get("reason").toString() : null : null,
-                details,
-                entry.ipAddress(),
-                entry.userAgent(),
-                entry.timestamp(),
-                Instant.now(),
-                signature
-            );
-        });
+        Optional<AuditEntryEntity> optional = auditEntryRepository.findById(auditId);
+        if (optional.isEmpty()) {
+            log.warn("Audit entry not found for completion: {}", auditId);
+            return;
+        }
+
+        AuditEntryEntity entity = optional.get();
+        entity.setResult(result);
+        if (details != null && details.get("reason") != null) {
+            entity.setReason(details.get("reason").toString());
+        }
+        entity.setContext(details);
+        entity.setCompletedAt(Instant.now());
+        entity.setSignature(signEntry(
+            entity.getId(),
+            entity.getAction().name(),
+            entity.getTimestamp(),
+            entity.getResource()
+        ));
+
+        auditEntryRepository.save(entity);
         log.debug("Completed audit: {} with result: {}", auditId, result);
     }
 
     @Override
+    @Transactional
     public void failAudit(String auditId, String reason) {
         completeAudit(auditId, AuditResult.FAILURE, reason);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<AuditEntry> getAuditsByResource(String resource) {
-        return auditStore.values().stream()
-            .filter(entry -> resource.equals(entry.resource()))
+        return auditEntryRepository.findByResourceOrderByTimestampDesc(resource).stream()
+            .map(AuditEntryMapper::toDomain)
             .collect(Collectors.toList());
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<AuditEntry> getAuditsByUser(String userId) {
-        return auditStore.values().stream()
-            .filter(entry -> userId.equals(entry.userId()))
+        return auditEntryRepository.findByUserIdOrderByTimestampDesc(userId).stream()
+            .map(AuditEntryMapper::toDomain)
             .collect(Collectors.toList());
     }
 
     @Override
+    @Transactional(readOnly = true)
     public boolean verifyIntegrity(String auditId) {
-        return auditStore.containsKey(auditId);
+        Optional<AuditEntryEntity> optional = auditEntryRepository.findById(auditId);
+        if (optional.isEmpty()) {
+            return false;
+        }
+
+        AuditEntryEntity entity = optional.get();
+        String expected = signEntry(
+            entity.getId(),
+            entity.getAction().name(),
+            entity.getTimestamp(),
+            entity.getResource()
+        );
+        return expected.equals(entity.getSignature());
     }
 
     private String signEntry(String id, String action, Instant timestamp, String resource) {

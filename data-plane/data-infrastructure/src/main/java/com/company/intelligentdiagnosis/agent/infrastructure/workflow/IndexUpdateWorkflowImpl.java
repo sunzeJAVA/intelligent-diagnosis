@@ -1,9 +1,12 @@
 package com.company.intelligentdiagnosis.agent.infrastructure.workflow;
 
+import com.company.intelligentdiagnosis.agent.domain.CodeElement;
 import com.company.intelligentdiagnosis.agent.domain.workflow.*;
 import com.company.intelligentdiagnosis.agent.domain.workflow.activity.IndexUpdateActivities;
 import io.temporal.activity.ActivityOptions;
 import io.temporal.workflow.Workflow;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -12,6 +15,8 @@ import java.util.List;
 import java.util.function.Supplier;
 
 public class IndexUpdateWorkflowImpl implements IndexUpdateWorkflow {
+
+    private static final Logger log = LoggerFactory.getLogger(IndexUpdateWorkflowImpl.class);
 
     private final IndexUpdateActivities activities = Workflow.newActivityStub(
         IndexUpdateActivities.class,
@@ -31,7 +36,15 @@ public class IndexUpdateWorkflowImpl implements IndexUpdateWorkflow {
     private String beforeSnapshotId;
 
     @Override
-    public UpdateResult update(GitPushEvent event) {
+    public UpdateResult update(String repositoryId, String repositoryName, String branch,
+                               String commitHash, String commitMessage, String author,
+                               String previousCommit, List<String> changedFiles,
+                               String repoPath, String language, String triggeredBy) {
+        GitPushEvent event = new GitPushEvent(
+            repositoryId, repositoryName, branch, commitHash, commitMessage,
+            author, previousCommit, changedFiles, repoPath, language, triggeredBy
+        );
+        String workflowId = Workflow.getInfo().getWorkflowId();
         status = UpdateStatus.RUNNING;
 
         try {
@@ -58,9 +71,9 @@ public class IndexUpdateWorkflowImpl implements IndexUpdateWorkflow {
                 status = UpdateStatus.APPROVED;
             }
 
-            beforeSnapshotId = executeStep("CREATE_SNAPSHOT", () -> activities.createSnapshot(event));
+            beforeSnapshotId = executeStep("CREATE_SNAPSHOT", () -> activities.createSnapshot(event, workflowId));
 
-            List<String> parsedElements = executeStep("PARSE", () -> activities.parseInSandbox(event));
+            List<CodeElement> parsedElements = executeStep("PARSE", () -> activities.parseInSandbox(event));
 
             executeStep("VALIDATE_OUTPUT", () -> {
                 activities.validateOutput(event, parsedElements);
@@ -68,12 +81,12 @@ public class IndexUpdateWorkflowImpl implements IndexUpdateWorkflow {
             });
 
             executeStep("WRITE_TEMP_INDEX", () -> {
-                activities.writeTempIndex(event, parsedElements);
+                activities.writeTempIndex(event, parsedElements, beforeSnapshotId);
                 return null;
             });
 
             executeStep("CANARY_VERIFY", () -> {
-                activities.canaryVerify(event);
+                activities.canaryVerify(event, beforeSnapshotId);
                 return null;
             });
 
@@ -93,11 +106,11 @@ public class IndexUpdateWorkflowImpl implements IndexUpdateWorkflow {
             }
 
             executeStep("PROMOTE", () -> {
-                activities.promoteToProduction(event, parsedElements);
+                activities.promoteToProduction(event, parsedElements, beforeSnapshotId);
                 return null;
             });
 
-            String afterSnapshotId = executeStep("CREATE_POST_SNAPSHOT", () -> activities.createSnapshot(event));
+            String afterSnapshotId = executeStep("CREATE_POST_SNAPSHOT", () -> activities.createSnapshot(event, workflowId));
 
             status = UpdateStatus.COMPLETED;
             return UpdateResult.success(parsedElements.size(), steps, beforeSnapshotId, afterSnapshotId);
@@ -109,6 +122,13 @@ public class IndexUpdateWorkflowImpl implements IndexUpdateWorkflow {
                 lastStep.setStatus(WorkflowStepStatus.FAILED);
                 lastStep.setError(e.getMessage());
                 lastStep.setCompletedAt(Instant.now());
+            }
+            if (beforeSnapshotId != null) {
+                try {
+                    activities.rollbackTo(beforeSnapshotId);
+                } catch (Exception rollbackEx) {
+                    log.error("Failed to auto-rollback after workflow failure", rollbackEx);
+                }
             }
             return UpdateResult.failed(e.getMessage(), steps);
         }

@@ -8,8 +8,11 @@ import java.util.List;
 
 public interface IndexUpdateWorkflow {
 
-    @WorkflowMethod(taskQueue = "index-update-task-queue")
-    UpdateResult update(GitPushEvent event);
+    @WorkflowMethod
+    UpdateResult update(String repositoryId, String repositoryName, String branch,
+                        String commitHash, String commitMessage, String author,
+                        String previousCommit, List<String> changedFiles,
+                        String repoPath, String language, String triggeredBy);
 
     @SignalMethod
     void approve(String approver, String comment);

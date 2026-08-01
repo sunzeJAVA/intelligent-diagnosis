@@ -31,7 +31,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,prometheus
+        include: health,info,metrics,prometheus,circuitbreakers,ratelimiters
   endpoint:
     health:
       probes:
@@ -39,17 +39,54 @@ management:
       show-details: always
       show-components: always
 
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        failure-rate-threshold: 50
+        slow-call-rate-threshold: 80
+        slow-call-duration-threshold: 60s
+        permitted-number-of-calls-in-half-open-state: 3
+        sliding-window-size: 10
+        wait-duration-in-open-state: 30s
+        automatic-transition-from-open-to-half-open-enabled: true
+    instances:
+      llm:
+        base-config: default
+      parse-worker:
+        base-config: default
+  ratelimiter:
+    configs:
+      default:
+        limit-for-period: 10
+        limit-refresh-period: 1m
+        timeout-duration: 0s
+    instances:
+      parse-api:
+        base-config: default
+      diagnosis-api:
+        base-config: default
+        limit-for-period: 30
+
 qdrant:
   host: ${QDRANT_HOST:localhost}
   port: ${QDRANT_PORT:6334}
   collection-name: ${QDRANT_COLLECTION:code-elements}
   create-collection-if-missing: true
 
+backup:
+  storage:
+    path: ${BACKUP_STORAGE_PATH:backups}
+
+snapshot:
+  backup:
+    cron: ${SNAPSHOT_BACKUP_CRON:0 0 */6 * * *}
+
 llm:
   # Backward-compatible single-model configuration. Used when `models` is empty.
-  provider: ${LLM_PROVIDER:mock}
-  base-url: ${LLM_BASE_URL:https://api.openai.com/v1}
-  model: ${LLM_MODEL:gpt-4o-mini}
+  provider: ${LLM_PROVIDER:openai}
+  base-url: ${LLM_BASE_URL:https://api.deepseek.com}
+  model: ${LLM_MODEL:deepseek-v4-flash}
   api-key: ${LLM_API_KEY:}
   max-tokens: 2048
   timeout-seconds: 60

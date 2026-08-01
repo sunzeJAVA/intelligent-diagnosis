@@ -53,27 +53,40 @@ public class VectorStoreClient {
     }
 
     /**
-     * 插入或更新向量
-     * 将代码元素转换为向量并存储到 Qdrant
+     * 插入或更新向量到生产集合
      *
      * @param repository 仓库名称
      * @param elements   代码元素列表
      */
     public void upsert(String repository, List<CodeElement> elements) {
+        ensureCollection();
+        upsert(properties.getCollectionName(), repository, elements);
+    }
+
+    /**
+     * 插入或更新向量到沙箱集合
+     *
+     * @param repository 仓库名称
+     * @param elements   代码元素列表
+     */
+    public void upsertToSandbox(String repository, List<CodeElement> elements) {
+        ensureSandboxCollection();
+        upsert(properties.getSandboxCollectionName(), repository, elements);
+    }
+
+    private void upsert(String collectionName, String repository, List<CodeElement> elements) {
         if (elements.isEmpty()) {
             return;
         }
-
-        ensureCollection();
 
         List<Points.PointStruct> points = elements.stream()
             .map(element -> toPointStruct(repository, element))
             .toList();
 
         try {
-            client.upsertAsync(properties.getCollectionName(), points).get();
+            client.upsertAsync(collectionName, points).get();
             log.info("Upserted {} vectors to Qdrant collection {} for repository {}",
-                points.size(), properties.getCollectionName(), repository);
+                points.size(), collectionName, repository);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new VectorStoreException("Interrupted while upserting vectors for repository: " + repository, e);
@@ -83,26 +96,94 @@ public class VectorStoreClient {
     }
 
     /**
-     * 删除指定仓库的所有向量
+     * 将沙箱集合中指定仓库的向量提升到生产集合
+     *
+     * @param repository 仓库名称
+     */
+    public void promoteSandboxToProduction(String repository) {
+        ensureCollection();
+        ensureSandboxCollection();
+
+        try {
+            Points.ScrollPoints scroll = Points.ScrollPoints.newBuilder()
+                .setCollectionName(properties.getSandboxCollectionName())
+                .setFilter(io.qdrant.client.grpc.Points.Filter.newBuilder()
+                    .addMust(matchKeyword("repository", repository))
+                    .build())
+                .setWithPayload(Points.WithPayloadSelector.newBuilder().setEnable(true).build())
+                .setWithVectors(Points.WithVectorsSelector.newBuilder().setEnable(true).build())
+                .setLimit(1000)
+                .build();
+
+            Points.ScrollResponse response = client.scrollAsync(scroll).get();
+            List<Points.PointStruct> points = response.getResultList().stream()
+                .map(point -> Points.PointStruct.newBuilder()
+                    .setId(point.getId())
+                    .setVectors(point.getVectors())
+                    .putAllPayload(point.getPayloadMap())
+                    .build())
+                .toList();
+
+            if (!points.isEmpty()) {
+                client.upsertAsync(properties.getCollectionName(), points).get();
+            }
+
+            deleteByRepository(properties.getSandboxCollectionName(), repository);
+            log.info("Promoted {} vectors from sandbox to production for repository {}", points.size(), repository);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new VectorStoreException("Interrupted while promoting sandbox vectors for repository: " + repository, e);
+        } catch (ExecutionException e) {
+            throw new VectorStoreException("Failed to promote sandbox vectors for repository: " + repository, e.getCause());
+        }
+    }
+
+    /**
+     * 删除生产集合中指定仓库的所有向量
      *
      * @param repository 仓库名称
      */
     public void deleteByRepository(String repository) {
         ensureCollection();
+        deleteByRepository(properties.getCollectionName(), repository);
+    }
 
+    private void deleteByRepository(String collectionName, String repository) {
         io.qdrant.client.grpc.Points.Filter filter = io.qdrant.client.grpc.Points.Filter.newBuilder()
             .addMust(matchKeyword("repository", repository))
             .build();
 
         try {
-            client.deleteAsync(properties.getCollectionName(), filter).get();
+            client.deleteAsync(collectionName, filter).get();
             log.info("Deleted vectors for repository {} from Qdrant collection {}",
-                repository, properties.getCollectionName());
+                repository, collectionName);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new VectorStoreException("Interrupted while deleting vectors for repository: " + repository, e);
         } catch (ExecutionException e) {
             throw new VectorStoreException("Failed to delete vectors for repository: " + repository, e.getCause());
+        }
+    }
+
+    /**
+     * 统计指定集合中某仓库的向量数量
+     *
+     * @param collectionName 集合名称
+     * @param repository     仓库名称
+     * @return 向量数量
+     */
+    public long countByRepository(String collectionName, String repository) {
+        io.qdrant.client.grpc.Points.Filter filter = io.qdrant.client.grpc.Points.Filter.newBuilder()
+            .addMust(matchKeyword("repository", repository))
+            .build();
+
+        try {
+            return client.countAsync(collectionName, filter, true).get();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new VectorStoreException("Interrupted while counting vectors for repository: " + repository, e);
+        } catch (ExecutionException e) {
+            throw new VectorStoreException("Failed to count vectors for repository: " + repository, e.getCause());
         }
     }
 
@@ -149,24 +230,32 @@ public class VectorStoreClient {
      * 如果配置允许且集合不存在，则创建集合
      */
     private void ensureCollection() {
+        ensureCollection(properties.getCollectionName());
+    }
+
+    private void ensureSandboxCollection() {
+        ensureCollection(properties.getSandboxCollectionName());
+    }
+
+    private void ensureCollection(String collectionName) {
         if (!properties.isCreateCollectionIfMissing()) {
             return;
         }
 
         try {
-            boolean exists = client.collectionExistsAsync(properties.getCollectionName()).get();
+            boolean exists = client.collectionExistsAsync(collectionName).get();
             if (exists) {
                 return;
             }
             client.createCollectionAsync(
-                properties.getCollectionName(),
+                collectionName,
                 Collections.VectorParams.newBuilder()
                     .setSize(embeddingGenerator.dimension())
                     .setDistance(Collections.Distance.Cosine)
                     .build()
             ).get();
             log.info("Created Qdrant collection {} with dimension {}",
-                properties.getCollectionName(), embeddingGenerator.dimension());
+                collectionName, embeddingGenerator.dimension());
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new VectorStoreException("Interrupted while creating Qdrant collection", e);

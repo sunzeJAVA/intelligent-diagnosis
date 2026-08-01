@@ -2,6 +2,7 @@ package com.company.intelligentdiagnosis.control.api;
 
 import com.company.intelligentdiagnosis.control.domain.workflow.WorkflowInfo;
 import com.company.intelligentdiagnosis.control.domain.workflow.WorkflowService;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -50,6 +51,7 @@ public class WorkflowController {
     }
 
     @PostMapping("/start")
+    @RateLimiter(name = "workflow-start")
     public ResponseEntity<WorkflowStartResponse> startWorkflow(@RequestBody StartWorkflowRequest request) {
         String workflowId = workflowService.startIndexUpdateWorkflow(
             request.repositoryId(),

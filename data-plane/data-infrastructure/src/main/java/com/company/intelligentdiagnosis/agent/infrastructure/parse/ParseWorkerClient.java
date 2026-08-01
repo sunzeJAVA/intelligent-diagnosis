@@ -3,6 +3,7 @@ package com.company.intelligentdiagnosis.agent.infrastructure.parse;
 import com.company.intelligentdiagnosis.agent.domain.CodeElement;
 import com.company.intelligentdiagnosis.parse.ParseRequest;
 import com.company.intelligentdiagnosis.parse.ParseWorkerGrpc;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import jakarta.annotation.PreDestroy;
@@ -50,6 +51,7 @@ public class ParseWorkerClient {
      * @param request  解析请求
      * @return 代码元素列表
      */
+    @CircuitBreaker(name = "parse-worker")
     public List<CodeElement> parse(String language, ParseRequest request) {
         ParseWorkerProperties.Endpoint endpoint = properties.endpointFor(language);
         if (endpoint == null) {
@@ -67,7 +69,7 @@ public class ParseWorkerClient {
                 .toList();
         } catch (Exception e) {
             log.error("Parse worker call failed for language {} at {}:{}", language, endpoint.host(), endpoint.port(), e);
-            throw new RuntimeException("Parse worker call failed for language " + language, e);
+            throw new ParseWorkerUnavailableException("Parse worker call failed for language " + language, e);
         }
     }
 

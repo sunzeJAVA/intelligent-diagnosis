@@ -19,6 +19,8 @@
         <protobuf.version>3.25.1</protobuf.version>
         <protobuf-maven-plugin.version>0.6.1</protobuf-maven-plugin.version>
         <os-maven-plugin.version>1.7.1</os-maven-plugin.version>
+        <!-- 解决 Maven 4 + protobuf 生成代码在进程内 javac 读取失败的问题 -->
+        <maven.compiler.fork>true</maven.compiler.fork>
     </properties>
 
     <dependencies>

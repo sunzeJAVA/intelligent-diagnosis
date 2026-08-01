@@ -3,6 +3,7 @@ package com.company.intelligentdiagnosis.agent.api;
 import com.company.intelligentdiagnosis.agent.application.ParseApplicationService;
 import com.company.intelligentdiagnosis.agent.domain.CodeElement;
 import com.company.intelligentdiagnosis.agent.domain.parse.ParseCommand;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -37,6 +38,7 @@ public class ParseController {
      * @return 解析出的代码元素列表
      */
     @PostMapping
+    @RateLimiter(name = "parse-api")
     public ResponseEntity<List<CodeElementDto>> parse(@RequestBody ParseRequestDto request) {
         ParseCommand command = new ParseCommand(
             request.repository(),

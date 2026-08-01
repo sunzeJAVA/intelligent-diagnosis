@@ -1,6 +1,7 @@
 package com.company.intelligentdiagnosis.agent.infrastructure.llm;
 
 import com.company.intelligentdiagnosis.agent.domain.llm.LlmClient;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.client.RestClient;
@@ -29,7 +30,19 @@ public class OpenAiLlmClient implements LlmClient {
         this.properties = properties;
     }
 
+    private static final String FALLBACK_RESPONSE = """
+        {
+          "summary": "LLM 服务当前不可用，已触发熔断降级",
+          "rootCause": "连续失败达到熔断阈值，系统已切换到降级响应。",
+          "suggestions": [
+            "检查 LLM 服务可用性与 API Key 配置",
+            "稍后重试诊断请求"
+          ]
+        }
+        """;
+
     @Override
+    @CircuitBreaker(name = "llm", fallbackMethod = "fallbackComplete")
     public String complete(String systemPrompt, String userPrompt) {
         ChatCompletionRequest request = new ChatCompletionRequest(
             properties.getModel(),
@@ -54,5 +67,10 @@ public class OpenAiLlmClient implements LlmClient {
         }
 
         return response.choices().get(0).message().content();
+    }
+
+    private String fallbackComplete(String systemPrompt, String userPrompt, Throwable throwable) {
+        log.warn("LLM circuit breaker opened or call failed, returning fallback response: {}", throwable.getMessage());
+        return FALLBACK_RESPONSE;
     }
 }
