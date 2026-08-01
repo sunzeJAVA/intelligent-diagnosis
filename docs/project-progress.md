@@ -176,7 +176,7 @@ IndexUpdateWorkflow
 | Micrometer 实时指标 | ✅ 完成 | `/api/data/metrics` + Micrometer Counter/Gauge，AdminController 调用实时数据 |
 | 安全事件监控告警 | ✅ 完成 | Micrometer Counter + Gauge + 定时异常检测（暴力破解） |
 | 修复 WorkflowService.listWorkflows 空列表 | ✅ 完成 | 基于快照表派生 `/api/data/workflows`，控制平面聚合 |
-| 安全扫描引擎 | ⬜ 未开始 | Phase G（可选） |
+| 安全扫描引擎 | ✅ 完成 | 基于正则的本地静态扫描：硬编码凭证、SQL 注入、弱哈希等 |
 
 ---
 
@@ -184,8 +184,7 @@ IndexUpdateWorkflow
 
 | 项目 | 影响 | 计划 |
 |------|------|------|
-| 安全扫描引擎为占位实现 | 无实际安全检测能力 | v0.2 后续迭代实现 |
-| RBAC + 审计已实现 | 方法级权限、登录审计、账户锁定已上线 | v0.8 GA Phase E/F/G 继续 |
+| RBAC + 审计 + 安全扫描已实现 | 方法级权限、登录审计、账户锁定、静态安全扫描已上线 | v0.8 GA 已完成 |
 | Neo4j 物理备份依赖 APOC 插件 | 未安装 APOC 时降级为手动 Cypher，性能略低 | 生产环境建议预装 APOC |
 
 ---
@@ -240,4 +239,5 @@ cd frontend && pnpm dev
 | `53381c3` | v0.8 GA Phase E：Micrometer 实时指标替换 AdminController 静态数据 | 2026-08-01 |
 | `9ba3617` | v0.8 GA Phase F：安全事件监控与告警指标 | 2026-08-01 |
 | `9598dc3` | fix: v0.8 GA Phase H 修复 WorkflowService.listWorkflows 空列表 | 2026-08-01 |
-| `当前工作区` | fix: 修复控制平面调用数据平面认证与默认管理员密码 | 2026-08-01 |
+| `e315b45` | fix: 修复控制平面调用数据平面认证与默认管理员密码 | 2026-08-01 |
+| `当前工作区` | feat: v0.8 GA Phase G 安全扫描引擎替换占位实现 | 2026-08-01 |

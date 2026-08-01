@@ -32,6 +32,9 @@ security:
     secret: ${JWT_SECRET:}
     expiration-ms: 86400000
     issuer: intelligent-diagnosis
+  scan:
+    enabled: ${SECURITY_SCAN_ENABLED:true}
+    block-on-high: ${SECURITY_SCAN_BLOCK_ON_HIGH:true}
 
 management:
   endpoints:

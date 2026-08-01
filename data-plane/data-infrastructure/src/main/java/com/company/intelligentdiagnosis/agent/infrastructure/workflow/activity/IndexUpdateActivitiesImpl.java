@@ -7,8 +7,10 @@ import com.company.intelligentdiagnosis.agent.domain.snapshot.SnapshotStatus;
 import com.company.intelligentdiagnosis.agent.domain.workflow.GitPushEvent;
 import com.company.intelligentdiagnosis.agent.domain.workflow.RiskLevel;
 import com.company.intelligentdiagnosis.agent.domain.workflow.SecurityScanResult;
+import com.company.intelligentdiagnosis.agent.domain.workflow.SecurityScanner;
 import com.company.intelligentdiagnosis.agent.domain.workflow.activity.IndexUpdateActivities;
 import com.company.intelligentdiagnosis.agent.infrastructure.parse.ParseWorkerClient;
+import com.company.intelligentdiagnosis.agent.infrastructure.security.SecurityScanProperties;
 import com.company.intelligentdiagnosis.parse.ParseRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,11 +26,17 @@ public class IndexUpdateActivitiesImpl implements IndexUpdateActivities {
 
     private final ParseWorkerClient parseWorkerClient;
     private final SnapshotApplicationService snapshotApplicationService;
+    private final SecurityScanner securityScanner;
+    private final SecurityScanProperties securityScanProperties;
 
     public IndexUpdateActivitiesImpl(ParseWorkerClient parseWorkerClient,
-                                     SnapshotApplicationService snapshotApplicationService) {
+                                     SnapshotApplicationService snapshotApplicationService,
+                                     SecurityScanner securityScanner,
+                                     SecurityScanProperties securityScanProperties) {
         this.parseWorkerClient = parseWorkerClient;
         this.snapshotApplicationService = snapshotApplicationService;
+        this.securityScanner = securityScanner;
+        this.securityScanProperties = securityScanProperties;
     }
 
     @Override
@@ -39,7 +47,29 @@ public class IndexUpdateActivitiesImpl implements IndexUpdateActivities {
     @Override
     public SecurityScanResult scanSecurity(GitPushEvent event) {
         log.info("Running security scan for repository {}", event.repositoryName());
-        return SecurityScanResult.passed();
+        if (!securityScanProperties.isEnabled()) {
+            log.info("Security scan is disabled, skipping");
+            return SecurityScanResult.passed();
+        }
+
+        SecurityScanResult result = securityScanner.scan(event);
+        if (!result.isPassed()) {
+            long highCount = result.getIssues().stream()
+                .filter(i -> i.severity() == com.company.intelligentdiagnosis.agent.domain.workflow.SecurityIssue.Severity.HIGH)
+                .count();
+            log.warn("Security scan found {} issues (HIGH {}) for repository {}",
+                result.getIssuesFound(), highCount, event.repositoryName());
+
+            if (!securityScanProperties.isBlockOnHigh()) {
+                log.warn("security.scan.block-on-high is disabled, continuing workflow");
+                return SecurityScanResult.passed();
+            }
+            if (highCount == 0) {
+                log.warn("Security scan found only LOW/MEDIUM issues, continuing workflow");
+                return SecurityScanResult.passed();
+            }
+        }
+        return result;
     }
 
     @Override
