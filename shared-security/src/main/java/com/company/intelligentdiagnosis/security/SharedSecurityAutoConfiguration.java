@@ -1,5 +1,7 @@
 package com.company.intelligentdiagnosis.security;
 
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.annotation.PostConstruct;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -41,6 +43,27 @@ public class SharedSecurityAutoConfiguration {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public Counter securityLoginSuccessCounter(MeterRegistry meterRegistry) {
+        return Counter.builder("security_login_success_total")
+            .description("Total number of successful logins")
+            .register(meterRegistry);
+    }
+
+    @Bean
+    public Counter securityLoginFailureCounter(MeterRegistry meterRegistry) {
+        return Counter.builder("security_login_failure_total")
+            .description("Total number of failed logins")
+            .register(meterRegistry);
+    }
+
+    @Bean
+    public Counter securityAccountLockedCounter(MeterRegistry meterRegistry) {
+        return Counter.builder("security_account_locked_total")
+            .description("Total number of account lockouts")
+            .register(meterRegistry);
     }
 
     @Bean

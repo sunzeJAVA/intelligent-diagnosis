@@ -6,6 +6,7 @@ import com.company.intelligentdiagnosis.control.domain.audit.AuditService;
 import com.company.intelligentdiagnosis.control.domain.security.User;
 import com.company.intelligentdiagnosis.control.domain.security.UserRepository;
 import com.company.intelligentdiagnosis.security.SecurityProperties;
+import io.micrometer.core.instrument.Counter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
@@ -34,13 +35,22 @@ public class AuthenticationEventListener {
     private final AuditService auditService;
     private final UserRepository userRepository;
     private final SecurityProperties securityProperties;
+    private final Counter loginSuccessCounter;
+    private final Counter loginFailureCounter;
+    private final Counter accountLockedCounter;
 
     public AuthenticationEventListener(AuditService auditService,
                                        UserRepository userRepository,
-                                       SecurityProperties securityProperties) {
+                                       SecurityProperties securityProperties,
+                                       Counter securityLoginSuccessCounter,
+                                       Counter securityLoginFailureCounter,
+                                       Counter securityAccountLockedCounter) {
         this.auditService = auditService;
         this.userRepository = userRepository;
         this.securityProperties = securityProperties;
+        this.loginSuccessCounter = securityLoginSuccessCounter;
+        this.loginFailureCounter = securityLoginFailureCounter;
+        this.accountLockedCounter = securityAccountLockedCounter;
     }
 
     @EventListener
@@ -59,6 +69,7 @@ public class AuthenticationEventListener {
                 "userAgent", userAgent != null ? userAgent : "unknown"
             )
         );
+        loginSuccessCounter.increment();
 
         resetLockout(username);
     }
@@ -82,6 +93,7 @@ public class AuthenticationEventListener {
             )
         );
         auditService.completeAudit(auditId, AuditResult.FAILURE, reason);
+        loginFailureCounter.increment();
 
         if (event instanceof AuthenticationFailureLockedEvent) {
             auditService.startAudit(
@@ -90,6 +102,7 @@ public class AuthenticationEventListener {
                 username,
                 Map.of("reason", "Account is locked", "ipAddress", ipAddress != null ? ipAddress : "unknown")
             );
+            accountLockedCounter.increment();
             return;
         }
 
@@ -129,6 +142,7 @@ public class AuthenticationEventListener {
                     "durationMinutes", durationMinutes
                 )
             );
+            accountLockedCounter.increment();
         }
 
         User updated = user.withFailedLogin(attempts, Instant.now(), lockedUntil);

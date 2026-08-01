@@ -5,11 +5,13 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication(scanBasePackages = "com.company.intelligentdiagnosis.control")
 @EnableJpaRepositories(basePackages = "com.company.intelligentdiagnosis.control.infrastructure")
 @EntityScan(basePackages = "com.company.intelligentdiagnosis.control.infrastructure")
 @ConfigurationPropertiesScan(basePackages = "com.company.intelligentdiagnosis.control")
+@EnableScheduling
 public class ControlPlaneApplication {
 
     public static void main(String[] args) {

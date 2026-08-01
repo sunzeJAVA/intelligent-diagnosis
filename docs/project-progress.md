@@ -174,7 +174,7 @@ IndexUpdateWorkflow
 | 数据加密（敏感配置） | ✅ 完成 | JWT_SECRET 强制配置；仓库凭证 AES/GCM 加密 |
 | 登录审计与账户锁定 | ✅ 完成 | 登录成功/失败/锁定审计 + 5 次失败锁定 30 分钟 |
 | Micrometer 实时指标 | ✅ 完成 | `/api/data/metrics` + Micrometer Counter/Gauge，AdminController 调用实时数据 |
-| 安全事件监控告警 | ⬜ 未开始 | Phase F |
+| 安全事件监控告警 | ✅ 完成 | Micrometer Counter + Gauge + 定时异常检测（暴力破解） |
 | 安全扫描引擎 | ⬜ 未开始 | Phase G（可选） |
 
 ---
@@ -233,4 +233,5 @@ cd frontend && pnpm dev
 | `c1a9f26` | v0.8 GA Phase A/B/C：RBAC + JWT 认证授权 + 前端登录 | 2026-08-01 |
 | `540b2c1` | docs: 更新 v0.8 GA Phase A/B/C 进度 | 2026-08-01 |
 | `5296c57` | v0.8 GA Phase D：数据加密与审计加固 | 2026-08-01 |
-| `当前工作区` | v0.8 GA Phase E：Micrometer 实时指标替换 AdminController 静态数据 | 2026-08-01 |
+| `53381c3` | v0.8 GA Phase E：Micrometer 实时指标替换 AdminController 静态数据 | 2026-08-01 |
+| `当前工作区` | v0.8 GA Phase F：安全事件监控与告警指标 | 2026-08-01 |
