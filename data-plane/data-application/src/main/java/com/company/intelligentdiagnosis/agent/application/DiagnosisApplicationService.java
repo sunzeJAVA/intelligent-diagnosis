@@ -9,6 +9,7 @@ import com.company.intelligentdiagnosis.agent.domain.diagnosis.PolicyEngine;
 import com.company.intelligentdiagnosis.agent.domain.llm.LlmClient;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.micrometer.core.instrument.Counter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -40,6 +41,7 @@ public class DiagnosisApplicationService {
     private final DiagnosisAuditor auditor;
     private final PolicyEngine policyEngine;
     private final ObjectMapper objectMapper;
+    private final Counter diagnosisCounter;
 
     /**
      * 构造函数
@@ -54,12 +56,14 @@ public class DiagnosisApplicationService {
                                        LlmClient llmClient,
                                        DiagnosisAuditor auditor,
                                        PolicyEngine policyEngine,
-                                       ObjectMapper objectMapper) {
+                                       ObjectMapper objectMapper,
+                                       Counter diagnosisCounter) {
         this.codeRetriever = codeRetriever;
         this.llmClient = llmClient;
         this.auditor = auditor;
         this.policyEngine = policyEngine;
         this.objectMapper = objectMapper;
+        this.diagnosisCounter = diagnosisCounter;
     }
 
     /**
@@ -80,6 +84,7 @@ public class DiagnosisApplicationService {
 
         long duration = System.currentTimeMillis() - start;
         auditor.record(request, response, duration);
+        diagnosisCounter.increment();
 
         return response;
     }

@@ -157,6 +157,30 @@ public class GraphStoreClient {
     }
 
     /**
+     * 统计生产图中所有节点数
+     */
+    public long countAllNodes() {
+        try (Session session = driver.session()) {
+            return session.executeRead(tx -> tx.run("""
+                MATCH (e:CodeElement)
+                RETURN count(e) AS count
+                """).single().get("count").asLong());
+        }
+    }
+
+    /**
+     * 统计生产图中所有关系数
+     */
+    public long countAllRelations() {
+        try (Session session = driver.session()) {
+            return session.executeRead(tx -> tx.run("""
+                MATCH ()-[r:RELATES_TO]->()
+                RETURN count(r) AS count
+                """).single().get("count").asLong());
+        }
+    }
+
+    /**
      * 统计生产图中指定仓库的节点数
      */
     public long countNodes(String repository) {

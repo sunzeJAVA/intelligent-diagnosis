@@ -108,6 +108,7 @@ IndexUpdateWorkflow
 | `/api/data/snapshots/{id}` | GET | 快照详情 |
 | `/api/data/snapshots/{left}/diff/{right}` | GET | 快照差异报告 |
 | `/api/data/snapshots/{id}/rollback` | POST | 物理回滚到指定快照 |
+| `/api/data/metrics` | GET | 实时系统指标（Qdrant/Neo4j/诊断次数） |
 
 ### 已实现的前端页面
 
@@ -172,7 +173,7 @@ IndexUpdateWorkflow
 | 前端登录与路由守卫 | ✅ 完成 | LoginView + axios 拦截器 + beforeEach 守卫 |
 | 数据加密（敏感配置） | ✅ 完成 | JWT_SECRET 强制配置；仓库凭证 AES/GCM 加密 |
 | 登录审计与账户锁定 | ✅ 完成 | 登录成功/失败/锁定审计 + 5 次失败锁定 30 分钟 |
-| Micrometer 实时指标 | ⬜ 未开始 | Phase E，替换 AdminController 静态数据 |
+| Micrometer 实时指标 | ✅ 完成 | `/api/data/metrics` + Micrometer Counter/Gauge，AdminController 调用实时数据 |
 | 安全事件监控告警 | ⬜ 未开始 | Phase F |
 | 安全扫描引擎 | ⬜ 未开始 | Phase G（可选） |
 
@@ -182,7 +183,6 @@ IndexUpdateWorkflow
 
 | 项目 | 影响 | 计划 |
 |------|------|------|
-| AdminController 指标为静态数据 | 指标数据不准确 | 接入 Micrometer 实时指标 |
 | WorkflowService.listWorkflows 返回空列表 | 无法列出历史工作流 | 基于快照表或 Temporal 列表 API 实现 |
 | 安全扫描引擎为占位实现 | 无实际安全检测能力 | v0.2 后续迭代实现 |
 | RBAC + 审计已实现 | 方法级权限、登录审计、账户锁定已上线 | v0.8 GA Phase E/F/G 继续 |
@@ -232,4 +232,5 @@ cd frontend && pnpm dev
 | `87845d6` | v0.5 RC：可恢复性 + 熔断限流 + 物理快照回滚 | 2026-08-01 |
 | `c1a9f26` | v0.8 GA Phase A/B/C：RBAC + JWT 认证授权 + 前端登录 | 2026-08-01 |
 | `540b2c1` | docs: 更新 v0.8 GA Phase A/B/C 进度 | 2026-08-01 |
-| `当前工作区` | v0.8 GA Phase D：数据加密与审计加固 | 2026-08-01 |
+| `5296c57` | v0.8 GA Phase D：数据加密与审计加固 | 2026-08-01 |
+| `当前工作区` | v0.8 GA Phase E：Micrometer 实时指标替换 AdminController 静态数据 | 2026-08-01 |

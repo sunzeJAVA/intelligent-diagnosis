@@ -1,6 +1,9 @@
 package com.company.intelligentdiagnosis.control.api;
 
 import com.company.intelligentdiagnosis.control.infrastructure.health.HealthCheckService;
+import com.company.intelligentdiagnosis.control.infrastructure.metrics.DataPlaneMetricsClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -13,22 +16,38 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/control/admin")
 public class AdminController {
 
-    private final HealthCheckService healthCheckService;
+    private static final Logger log = LoggerFactory.getLogger(AdminController.class);
 
-    public AdminController(HealthCheckService healthCheckService) {
+    private final HealthCheckService healthCheckService;
+    private final DataPlaneMetricsClient metricsClient;
+
+    public AdminController(HealthCheckService healthCheckService,
+                           DataPlaneMetricsClient metricsClient) {
         this.healthCheckService = healthCheckService;
+        this.metricsClient = metricsClient;
     }
 
     @GetMapping("/metrics")
     @PreAuthorize("hasAuthority('admin:read')")
     public ResponseEntity<MetricsDto> getMetrics() {
-        MetricsDto metrics = new MetricsDto(
+        DataPlaneMetricsClient.MetricsDto realtime = metricsClient.fetchMetrics();
+        if (realtime != null) {
+            return ResponseEntity.ok(new MetricsDto(
+                realtime.vectorCount(),
+                realtime.graphNodes(),
+                realtime.graphRelations(),
+                realtime.diagnosisCount()
+            ));
+        }
+
+        log.warn("Returning fallback static metrics because data-plane is unavailable");
+        MetricsDto fallback = new MetricsDto(
             15482L,
             8934L,
             23107L,
             1267L
         );
-        return ResponseEntity.ok(metrics);
+        return ResponseEntity.ok(fallback);
     }
 
     @GetMapping("/infrastructures")
