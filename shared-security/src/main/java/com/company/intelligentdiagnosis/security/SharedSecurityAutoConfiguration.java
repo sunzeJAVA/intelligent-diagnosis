@@ -1,5 +1,6 @@
 package com.company.intelligentdiagnosis.security;
 
+import jakarta.annotation.PostConstruct;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -22,9 +23,20 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
  * 提供 JWT、密码加密、默认无状态安全过滤器链以及方法级权限注解支持
  */
 @AutoConfiguration
-@EnableConfigurationProperties(JwtProperties.class)
+@EnableConfigurationProperties({JwtProperties.class, SecurityProperties.class})
 @EnableMethodSecurity(prePostEnabled = true)
 public class SharedSecurityAutoConfiguration {
+
+    private final JwtProperties jwtProperties;
+
+    public SharedSecurityAutoConfiguration(JwtProperties jwtProperties) {
+        this.jwtProperties = jwtProperties;
+    }
+
+    @PostConstruct
+    public void validateJwtProperties() {
+        jwtProperties.validate();
+    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {

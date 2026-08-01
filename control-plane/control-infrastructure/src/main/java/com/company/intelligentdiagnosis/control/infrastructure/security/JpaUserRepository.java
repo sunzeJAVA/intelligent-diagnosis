@@ -4,6 +4,7 @@ import com.company.intelligentdiagnosis.control.domain.security.User;
 import com.company.intelligentdiagnosis.control.domain.security.UserRepository;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
 import java.util.Optional;
 
 @Component
@@ -22,6 +23,11 @@ public class JpaUserRepository implements UserRepository {
         entity.setPassword(user.password());
         entity.setRole(user.role());
         entity.setEnabled(user.enabled());
+        entity.setFailedLoginAttempts(user.failedLoginAttempts());
+        entity.setLastFailedLoginAt(user.lastFailedLoginAt());
+        entity.setLockedUntil(user.lockedUntil());
+        entity.setCreatedAt(Instant.now());
+        entity.setUpdatedAt(Instant.now());
         jpaRepository.save(entity);
         return user;
     }
@@ -37,12 +43,28 @@ public class JpaUserRepository implements UserRepository {
         return jpaRepository.existsByUsername(username);
     }
 
+    @Override
+    public User updateLockout(User user) {
+        UserEntity entity = jpaRepository.findByUsername(user.username())
+            .orElseThrow(() -> new IllegalStateException("User not found: " + user.username()));
+        entity.setFailedLoginAttempts(user.failedLoginAttempts());
+        entity.setLastFailedLoginAt(user.lastFailedLoginAt());
+        entity.setLockedUntil(user.lockedUntil());
+        entity.setUpdatedAt(Instant.now());
+        jpaRepository.save(entity);
+        return user;
+    }
+
     private User toDomain(UserEntity entity) {
         return new User(
             entity.getUsername(),
             entity.getPassword(),
             entity.getRole(),
-            entity.isEnabled()
+            entity.isEnabled(),
+            entity.getFailedLoginAttempts(),
+            entity.getLastFailedLoginAt(),
+            entity.getLockedUntil(),
+            entity.getUpdatedAt()
         );
     }
 }

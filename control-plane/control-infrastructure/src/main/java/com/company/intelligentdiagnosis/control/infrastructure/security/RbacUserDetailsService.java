@@ -29,6 +29,13 @@ public class RbacUserDetailsService implements UserDetailsService {
             .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
 
         List<String> authorities = Role.authoritiesOf(user.role()).stream().toList();
-        return new SecurityUserDetails(user.username(), user.password(), authorities, user.enabled());
+        return new SecurityUserDetails(
+            user.username(),
+            user.password(),
+            authorities,
+            user.enabled(),
+            !user.isLocked(),
+            true
+        );
     }
 }

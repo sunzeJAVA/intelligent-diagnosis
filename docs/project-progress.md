@@ -170,8 +170,8 @@ IndexUpdateWorkflow
 | Spring Security 集成 | ✅ 完成 | 无状态过滤器链 + 方法级 `@PreAuthorize` |
 | 控制器权限注解 | ✅ 完成 | control-plane / data-plane 全部端点授权 |
 | 前端登录与路由守卫 | ✅ 完成 | LoginView + axios 拦截器 + beforeEach 守卫 |
-| 数据加密（敏感配置） | ⬜ 未开始 | Phase D |
-| 登录审计与账户锁定 | ⬜ 未开始 | Phase D |
+| 数据加密（敏感配置） | ✅ 完成 | JWT_SECRET 强制配置；仓库凭证 AES/GCM 加密 |
+| 登录审计与账户锁定 | ✅ 完成 | 登录成功/失败/锁定审计 + 5 次失败锁定 30 分钟 |
 | Micrometer 实时指标 | ⬜ 未开始 | Phase E，替换 AdminController 静态数据 |
 | 安全事件监控告警 | ⬜ 未开始 | Phase F |
 | 安全扫描引擎 | ⬜ 未开始 | Phase G（可选） |
@@ -185,7 +185,7 @@ IndexUpdateWorkflow
 | AdminController 指标为静态数据 | 指标数据不准确 | 接入 Micrometer 实时指标 |
 | WorkflowService.listWorkflows 返回空列表 | 无法列出历史工作流 | 基于快照表或 Temporal 列表 API 实现 |
 | 安全扫描引擎为占位实现 | 无实际安全检测能力 | v0.2 后续迭代实现 |
-| RBAC 已实现 | 方法级权限已覆盖全部端点，待补充数据加密与审计 | v0.8 GA Phase D/E/F 继续 |
+| RBAC + 审计已实现 | 方法级权限、登录审计、账户锁定已上线 | v0.8 GA Phase E/F/G 继续 |
 | Neo4j 物理备份依赖 APOC 插件 | 未安装 APOC 时降级为手动 Cypher，性能略低 | 生产环境建议预装 APOC |
 
 ---
@@ -193,6 +193,11 @@ IndexUpdateWorkflow
 ## 服务启动命令
 
 ```bash
+# 0. 环境变量（必须）
+export JWT_SECRET="your-32-bytes-or-longer-secret-key-here"
+export SECURITY_LOCKOUT_MAX_ATTEMPTS=5
+export SECURITY_LOCKOUT_DURATION_MINUTES=30
+
 # 1. 基础设施
 cd infrastructure/docker && docker-compose up -d postgres qdrant neo4j temporal temporal-db
 
@@ -226,4 +231,5 @@ cd frontend && pnpm dev
 | `d9d1908` | 完善控制平面工作流编排与前端管理界面 | 2026-07-30 |
 | `87845d6` | v0.5 RC：可恢复性 + 熔断限流 + 物理快照回滚 | 2026-08-01 |
 | `c1a9f26` | v0.8 GA Phase A/B/C：RBAC + JWT 认证授权 + 前端登录 | 2026-08-01 |
-| `当前工作区` | 更新项目进度文档 | 2026-08-01 |
+| `540b2c1` | docs: 更新 v0.8 GA Phase A/B/C 进度 | 2026-08-01 |
+| `当前工作区` | v0.8 GA Phase D：数据加密与审计加固 | 2026-08-01 |

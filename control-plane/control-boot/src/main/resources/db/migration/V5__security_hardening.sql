@@ -1,0 +1,18 @@
+-- 账户锁定相关字段
+ALTER TABLE app_user
+    ADD COLUMN IF NOT EXISTS failed_login_attempts INT NOT NULL DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS last_failed_login_at TIMESTAMPTZ,
+    ADD COLUMN IF NOT EXISTS locked_until TIMESTAMPTZ,
+    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
+
+-- 更新审计动作约束：新增登录相关动作
+ALTER TABLE audit_entry
+    DROP CONSTRAINT IF EXISTS chk_audit_entry_action;
+
+ALTER TABLE audit_entry
+    ADD CONSTRAINT chk_audit_entry_action CHECK (action IN (
+        'CODE_PARSE', 'INDEX_CREATE', 'INDEX_UPDATE', 'INDEX_DELETE', 'INDEX_ROLLBACK',
+        'DIAGNOSIS_REQUEST', 'DIAGNOSIS_APPROVE', 'DIAGNOSIS_EXPORT',
+        'CONFIG_READ', 'CONFIG_WRITE', 'POLICY_CHANGE',
+        'LOGIN_SUCCESS', 'LOGIN_FAILURE', 'ACCOUNT_LOCKED'
+    ));
