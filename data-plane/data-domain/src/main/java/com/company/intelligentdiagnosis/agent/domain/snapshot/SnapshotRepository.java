@@ -14,4 +14,6 @@ public interface SnapshotRepository {
     List<IndexSnapshot> findByStatus(SnapshotStatus status);
 
     Optional<IndexSnapshot> findLatestPromotedByRepositoryName(String repositoryName);
+
+    List<IndexSnapshot> findAllOrderByCreatedAtDesc();
 }

@@ -56,6 +56,14 @@ public class JpaSnapshotRepository implements SnapshotRepository {
             .map(SnapshotMapper::toDomain);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<IndexSnapshot> findAllOrderByCreatedAtDesc() {
+        return jpaRepository.findAllByOrderByCreatedAtDesc().stream()
+            .map(SnapshotMapper::toDomain)
+            .collect(Collectors.toList());
+    }
+
     @Transactional(readOnly = true)
     Optional<IndexSnapshotEntity> findEntityById(String id) {
         return jpaRepository.findById(id);

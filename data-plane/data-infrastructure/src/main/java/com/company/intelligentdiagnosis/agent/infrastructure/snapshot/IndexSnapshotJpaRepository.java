@@ -17,4 +17,6 @@ public interface IndexSnapshotJpaRepository extends JpaRepository<IndexSnapshotE
     Optional<IndexSnapshotEntity> findFirstByRepositoryNameAndStatusOrderByCreatedAtDesc(
         String repositoryName, SnapshotStatus status
     );
+
+    List<IndexSnapshotEntity> findAllByOrderByCreatedAtDesc();
 }

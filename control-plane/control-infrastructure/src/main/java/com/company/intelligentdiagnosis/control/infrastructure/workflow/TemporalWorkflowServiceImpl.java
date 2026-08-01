@@ -26,7 +26,14 @@ public class TemporalWorkflowServiceImpl implements WorkflowService {
     @Autowired(required = false)
     private WorkflowClient workflowClient;
 
+    private final DataPlaneWorkflowClient dataPlaneWorkflowClient;
+
+    public TemporalWorkflowServiceImpl(DataPlaneWorkflowClient dataPlaneWorkflowClient) {
+        this.dataPlaneWorkflowClient = dataPlaneWorkflowClient;
+    }
+
     public TemporalWorkflowServiceImpl() {
+        this.dataPlaneWorkflowClient = null;
     }
 
     private boolean isTemporalAvailable() {
@@ -35,7 +42,29 @@ public class TemporalWorkflowServiceImpl implements WorkflowService {
 
     @Override
     public List<WorkflowInfo> listWorkflows() {
-        return List.of();
+        if (dataPlaneWorkflowClient == null) {
+            return List.of();
+        }
+
+        List<DataPlaneWorkflowClient.WorkflowSummaryDto> summaries = dataPlaneWorkflowClient.listWorkflows();
+        if (summaries == null) {
+            log.warn("Data-plane workflow list unavailable, returning empty list");
+            return List.of();
+        }
+
+        return summaries.stream()
+            .map(s -> new WorkflowInfo(
+                s.workflowId(),
+                s.workflowType(),
+                s.status(),
+                s.currentStep(),
+                s.startedAt() != null ? Instant.parse(s.startedAt()) : null,
+                s.completedAt() != null ? Instant.parse(s.completedAt()) : null,
+                s.repositoryId(),
+                s.repositoryName(),
+                s.commitHash()
+            ))
+            .toList();
     }
 
     @Override

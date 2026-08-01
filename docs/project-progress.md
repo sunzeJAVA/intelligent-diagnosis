@@ -175,6 +175,7 @@ IndexUpdateWorkflow
 | 登录审计与账户锁定 | ✅ 完成 | 登录成功/失败/锁定审计 + 5 次失败锁定 30 分钟 |
 | Micrometer 实时指标 | ✅ 完成 | `/api/data/metrics` + Micrometer Counter/Gauge，AdminController 调用实时数据 |
 | 安全事件监控告警 | ✅ 完成 | Micrometer Counter + Gauge + 定时异常检测（暴力破解） |
+| 修复 WorkflowService.listWorkflows 空列表 | ✅ 完成 | 基于快照表派生 `/api/data/workflows`，控制平面聚合 |
 | 安全扫描引擎 | ⬜ 未开始 | Phase G（可选） |
 
 ---
@@ -183,7 +184,6 @@ IndexUpdateWorkflow
 
 | 项目 | 影响 | 计划 |
 |------|------|------|
-| WorkflowService.listWorkflows 返回空列表 | 无法列出历史工作流 | 基于快照表或 Temporal 列表 API 实现 |
 | 安全扫描引擎为占位实现 | 无实际安全检测能力 | v0.2 后续迭代实现 |
 | RBAC + 审计已实现 | 方法级权限、登录审计、账户锁定已上线 | v0.8 GA Phase E/F/G 继续 |
 | Neo4j 物理备份依赖 APOC 插件 | 未安装 APOC 时降级为手动 Cypher，性能略低 | 生产环境建议预装 APOC |
@@ -234,4 +234,5 @@ cd frontend && pnpm dev
 | `540b2c1` | docs: 更新 v0.8 GA Phase A/B/C 进度 | 2026-08-01 |
 | `5296c57` | v0.8 GA Phase D：数据加密与审计加固 | 2026-08-01 |
 | `53381c3` | v0.8 GA Phase E：Micrometer 实时指标替换 AdminController 静态数据 | 2026-08-01 |
-| `当前工作区` | v0.8 GA Phase F：安全事件监控与告警指标 | 2026-08-01 |
+| `9ba3617` | v0.8 GA Phase F：安全事件监控与告警指标 | 2026-08-01 |
+| `当前工作区` | fix: v0.8 GA Phase H 修复 WorkflowService.listWorkflows 空列表 | 2026-08-01 |
