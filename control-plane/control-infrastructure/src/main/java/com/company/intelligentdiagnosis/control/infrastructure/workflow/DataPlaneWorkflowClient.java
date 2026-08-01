@@ -1,8 +1,10 @@
 package com.company.intelligentdiagnosis.control.infrastructure.workflow;
 
 import com.company.intelligentdiagnosis.control.infrastructure.metrics.DataPlaneMetricsProperties;
+import com.company.intelligentdiagnosis.control.infrastructure.security.ServiceAccountTokenProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
@@ -19,9 +21,14 @@ public class DataPlaneWorkflowClient {
 
     private final RestClient restClient;
 
-    public DataPlaneWorkflowClient(DataPlaneMetricsProperties properties) {
+    public DataPlaneWorkflowClient(DataPlaneMetricsProperties properties,
+                                   ServiceAccountTokenProvider tokenProvider) {
         this.restClient = RestClient.builder()
             .baseUrl(properties.getBaseUrl())
+            .requestInterceptor((request, body, execution) -> {
+                request.getHeaders().set(HttpHeaders.AUTHORIZATION, "Bearer " + tokenProvider.getToken());
+                return execution.execute(request, body);
+            })
             .build();
     }
 

@@ -1,7 +1,9 @@
 package com.company.intelligentdiagnosis.control.infrastructure.metrics;
 
+import com.company.intelligentdiagnosis.control.infrastructure.security.ServiceAccountTokenProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
@@ -16,9 +18,14 @@ public class DataPlaneMetricsClient {
 
     private final RestClient restClient;
 
-    public DataPlaneMetricsClient(DataPlaneMetricsProperties properties) {
+    public DataPlaneMetricsClient(DataPlaneMetricsProperties properties,
+                                  ServiceAccountTokenProvider tokenProvider) {
         this.restClient = RestClient.builder()
             .baseUrl(properties.getBaseUrl())
+            .requestInterceptor((request, body, execution) -> {
+                request.getHeaders().set(HttpHeaders.AUTHORIZATION, "Bearer " + tokenProvider.getToken());
+                return execution.execute(request, body);
+            })
             .build();
     }
 

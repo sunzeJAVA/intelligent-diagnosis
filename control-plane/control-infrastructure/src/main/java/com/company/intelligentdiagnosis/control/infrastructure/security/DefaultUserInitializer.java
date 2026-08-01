@@ -33,7 +33,7 @@ public class DefaultUserInitializer implements CommandLineRunner {
 
         User admin = new User(
             "admin",
-            passwordEncoder.encode("admin123"),
+            passwordEncoder.encode("admin"),
             "ADMIN",
             true
         );

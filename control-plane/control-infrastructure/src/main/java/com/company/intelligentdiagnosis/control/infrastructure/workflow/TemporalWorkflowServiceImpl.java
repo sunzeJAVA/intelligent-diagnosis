@@ -28,12 +28,9 @@ public class TemporalWorkflowServiceImpl implements WorkflowService {
 
     private final DataPlaneWorkflowClient dataPlaneWorkflowClient;
 
+    @Autowired
     public TemporalWorkflowServiceImpl(DataPlaneWorkflowClient dataPlaneWorkflowClient) {
         this.dataPlaneWorkflowClient = dataPlaneWorkflowClient;
-    }
-
-    public TemporalWorkflowServiceImpl() {
-        this.dataPlaneWorkflowClient = null;
     }
 
     private boolean isTemporalAvailable() {

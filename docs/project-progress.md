@@ -220,6 +220,10 @@ cd frontend && pnpm dev
 - Qdrant: localhost:6333
 - Neo4j: localhost:7687
 
+内部调用说明：
+- 控制平面调用数据平面（`/api/data/metrics`、`/api/data/workflows`）时使用服务账号 JWT，需在两端配置相同的 `JWT_SECRET`。
+- 默认管理员账号：`admin` / `admin`。
+
 ---
 
 ## Git 提交历史
@@ -235,4 +239,5 @@ cd frontend && pnpm dev
 | `5296c57` | v0.8 GA Phase D：数据加密与审计加固 | 2026-08-01 |
 | `53381c3` | v0.8 GA Phase E：Micrometer 实时指标替换 AdminController 静态数据 | 2026-08-01 |
 | `9ba3617` | v0.8 GA Phase F：安全事件监控与告警指标 | 2026-08-01 |
-| `当前工作区` | fix: v0.8 GA Phase H 修复 WorkflowService.listWorkflows 空列表 | 2026-08-01 |
+| `9598dc3` | fix: v0.8 GA Phase H 修复 WorkflowService.listWorkflows 空列表 | 2026-08-01 |
+| `当前工作区` | fix: 修复控制平面调用数据平面认证与默认管理员密码 | 2026-08-01 |
