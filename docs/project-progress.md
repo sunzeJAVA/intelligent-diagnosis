@@ -1,7 +1,7 @@
 # 项目进度跟踪
 
 **更新日期**: 2026-08-01
-**当前版本**: v0.5 RC 阶段
+**当前版本**: v0.8 GA 阶段
 **对照架构文档**: v2.1 受控工程
 
 ---
@@ -14,7 +14,7 @@
 | v0.2 Alpha | 可控制 | ✅ 已完成 | 85% |
 | v0.3 Beta | 可验证 | ✅ 已完成 | 90% |
 | v0.5 RC | 可恢复 | ✅ 已完成 | 90% |
-| v0.8 GA | 安全默认 | ⬜ 未开始 | 0% |
+| v0.8 GA | 安全默认 | 🟡 进行中 | 40% |
 | v1.0 Stable | 渐进发布 | ⬜ 未开始 | 0% |
 
 ---
@@ -61,7 +61,7 @@
 | 自动刷新 | ✅ 完成 | 30 秒轮询 |
 | 熔断降级 | ✅ 完成 | v0.5 RC 接入 Resilience4j |
 | 限流防护 | ✅ 完成 | v0.5 RC 接入 Resilience4j |
-| RBAC 权限 | ⬜ 未开始 | 待实现 |
+| RBAC 权限 | ✅ 完成 | v0.8 GA Phase A/B/C 实现 JWT + Spring Security + 方法级权限 |
 | 安全扫描引擎（完整） | ⬜ 未开始 | 待实现 |
 
 ### 已实现的工作流编排
@@ -96,6 +96,7 @@ IndexUpdateWorkflow
 | `/api/control/admin/metrics` | GET | 系统指标 |
 | `/api/control/admin/infrastructures` | GET | 基础设施健康状态 |
 | `/api/control/admin/configurations` | GET/PUT | 系统配置管理 |
+| `/api/control/auth/login` | POST | JWT 登录 |
 
 **数据平面** (http://localhost:8082):
 | 端点 | 方法 | 功能 |
@@ -118,6 +119,7 @@ IndexUpdateWorkflow
 | 工作流监控 | `/workflows` | 工作流列表 + 暂停/恢复/回滚 |
 | 快照管理 | `/snapshots` | 快照列表 + 校验状态 + 版本差异 + 物理备份状态 + 回滚 |
 | 系统管理 | `/admin` | 指标 + 基础设施状态 + 配置管理 |
+| 登录 | `/login` | JWT 登录 + 路由守卫 |
 
 ### 基础设施健康检查
 
@@ -158,6 +160,24 @@ IndexUpdateWorkflow
 
 ---
 
+## v0.8 GA — 安全默认（进行中）
+
+| 功能 | 状态 | 说明 |
+|------|------|------|
+| RBAC 领域模型 | ✅ 完成 | `User` / `Role` / `Permission` 领域模型 |
+| 用户表与默认账号 | ✅ 完成 | Flyway V4 + ADMIN/OPERATOR/VIEWER 默认账号 |
+| JWT 签发与校验 | ✅ 完成 | `shared-security` 模块 + jjwt 0.12.6 |
+| Spring Security 集成 | ✅ 完成 | 无状态过滤器链 + 方法级 `@PreAuthorize` |
+| 控制器权限注解 | ✅ 完成 | control-plane / data-plane 全部端点授权 |
+| 前端登录与路由守卫 | ✅ 完成 | LoginView + axios 拦截器 + beforeEach 守卫 |
+| 数据加密（敏感配置） | ⬜ 未开始 | Phase D |
+| 登录审计与账户锁定 | ⬜ 未开始 | Phase D |
+| Micrometer 实时指标 | ⬜ 未开始 | Phase E，替换 AdminController 静态数据 |
+| 安全事件监控告警 | ⬜ 未开始 | Phase F |
+| 安全扫描引擎 | ⬜ 未开始 | Phase G（可选） |
+
+---
+
 ## 技术债务与已知限制
 
 | 项目 | 影响 | 计划 |
@@ -165,7 +185,7 @@ IndexUpdateWorkflow
 | AdminController 指标为静态数据 | 指标数据不准确 | 接入 Micrometer 实时指标 |
 | WorkflowService.listWorkflows 返回空列表 | 无法列出历史工作流 | 基于快照表或 Temporal 列表 API 实现 |
 | 安全扫描引擎为占位实现 | 无实际安全检测能力 | v0.2 后续迭代实现 |
-| RBAC 未实现 | 任意用户可访问所有功能 | v0.8 GA 实现 |
+| RBAC 已实现 | 方法级权限已覆盖全部端点，待补充数据加密与审计 | v0.8 GA Phase D/E/F 继续 |
 | Neo4j 物理备份依赖 APOC 插件 | 未安装 APOC 时降级为手动 Cypher，性能略低 | 生产环境建议预装 APOC |
 
 ---
@@ -205,4 +225,5 @@ cd frontend && pnpm dev
 | `594fb22` | 完成多项功能开发与优化 | 2026-07-22 |
 | `d9d1908` | 完善控制平面工作流编排与前端管理界面 | 2026-07-30 |
 | `87845d6` | v0.5 RC：可恢复性 + 熔断限流 + 物理快照回滚 | 2026-08-01 |
-| `当前工作区` | 实现 v0.5 RC：物理快照、自动备份、回滚 API、前端回滚界面 | 2026-08-01 |
+| `c1a9f26` | v0.8 GA Phase A/B/C：RBAC + JWT 认证授权 + 前端登录 | 2026-08-01 |
+| `当前工作区` | 更新项目进度文档 | 2026-08-01 |
