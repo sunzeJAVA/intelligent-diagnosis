@@ -8,6 +8,7 @@ import com.company.intelligentdiagnosis.agent.domain.diagnosis.DiagnosisResponse
 import com.company.intelligentdiagnosis.agent.domain.diagnosis.PolicyEngine;
 import com.company.intelligentdiagnosis.agent.domain.llm.LlmClient;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.micrometer.core.instrument.Counter;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -39,12 +40,15 @@ class DiagnosisApplicationServiceTest {
     @Mock
     private PolicyEngine policyEngine;
 
+    @Mock
+    private Counter diagnosisCounter;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Test
     void shouldDiagnoseWithStructuredJsonResponse() {
         DiagnosisApplicationService service = new DiagnosisApplicationService(
-            codeRetriever, llmClient, auditor, policyEngine, objectMapper
+            codeRetriever, llmClient, auditor, policyEngine, objectMapper, diagnosisCounter
         );
 
         DiagnosisRequest request = new DiagnosisRequest("query", "error", "svc", "user", "tenant");
@@ -73,7 +77,7 @@ class DiagnosisApplicationServiceTest {
     @Test
     void shouldStripMarkdownFencesFromJsonResponse() {
         DiagnosisApplicationService service = new DiagnosisApplicationService(
-            codeRetriever, llmClient, auditor, policyEngine, objectMapper
+            codeRetriever, llmClient, auditor, policyEngine, objectMapper, diagnosisCounter
         );
 
         DiagnosisRequest request = new DiagnosisRequest("query", "error", "svc", "user", "tenant");
@@ -98,7 +102,7 @@ class DiagnosisApplicationServiceTest {
     @Test
     void shouldFallbackWhenLlmReturnsInvalidJson() {
         DiagnosisApplicationService service = new DiagnosisApplicationService(
-            codeRetriever, llmClient, auditor, policyEngine, objectMapper
+            codeRetriever, llmClient, auditor, policyEngine, objectMapper, diagnosisCounter
         );
 
         DiagnosisRequest request = new DiagnosisRequest("query", "error", "svc", "user", "tenant");
