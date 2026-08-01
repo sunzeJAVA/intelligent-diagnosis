@@ -1,7 +1,7 @@
 # 项目进度跟踪
 
-**更新日期**: 2026-07-31
-**当前版本**: v0.3 Beta 阶段
+**更新日期**: 2026-08-01
+**当前版本**: v0.5 RC 阶段
 **对照架构文档**: v2.1 受控工程
 
 ---
@@ -13,7 +13,7 @@
 | v0.1 MVP | 可观察性基础 | ✅ 已完成 | 90% |
 | v0.2 Alpha | 可控制 | ✅ 已完成 | 85% |
 | v0.3 Beta | 可验证 | ✅ 已完成 | 90% |
-| v0.5 RC | 可恢复 | ⬜ 未开始 | 0% |
+| v0.5 RC | 可恢复 | ✅ 已完成 | 90% |
 | v0.8 GA | 安全默认 | ⬜ 未开始 | 0% |
 | v1.0 Stable | 渐进发布 | ⬜ 未开始 | 0% |
 
@@ -59,8 +59,8 @@
 | HealthCheckService | ✅ 完成 | Socket 端口健康检查 |
 | AdminController | ✅ 完成 | 系统指标 + 基础设施健康 API |
 | 自动刷新 | ✅ 完成 | 30 秒轮询 |
-| 熔断降级 | ⬜ 未开始 | 待实现 |
-| 限流防护 | ⬜ 未开始 | 待实现 |
+| 熔断降级 | ✅ 完成 | v0.5 RC 接入 Resilience4j |
+| 限流防护 | ✅ 完成 | v0.5 RC 接入 Resilience4j |
 | RBAC 权限 | ⬜ 未开始 | 待实现 |
 | 安全扫描引擎（完整） | ⬜ 未开始 | 待实现 |
 
@@ -106,6 +106,7 @@ IndexUpdateWorkflow
 | `/api/data/snapshots` | GET | 按仓库查询快照 |
 | `/api/data/snapshots/{id}` | GET | 快照详情 |
 | `/api/data/snapshots/{left}/diff/{right}` | GET | 快照差异报告 |
+| `/api/data/snapshots/{id}/rollback` | POST | 物理回滚到指定快照 |
 
 ### 已实现的前端页面
 
@@ -115,7 +116,7 @@ IndexUpdateWorkflow
 | 仓库管理 | `/repositories` | 仓库 CRUD + 同步 |
 | 审批工作台 | `/approvals` | 审批列表（待审批/已批准/已拒绝） |
 | 工作流监控 | `/workflows` | 工作流列表 + 暂停/恢复/回滚 |
-| 快照管理 | `/snapshots` | 快照列表 + 校验状态 + 版本差异 |
+| 快照管理 | `/snapshots` | 快照列表 + 校验状态 + 版本差异 + 物理备份状态 + 回滚 |
 | 系统管理 | `/admin` | 指标 + 基础设施状态 + 配置管理 |
 
 ### 基础设施健康检查
@@ -141,6 +142,22 @@ IndexUpdateWorkflow
 
 ---
 
+## v0.5 RC — 可恢复
+
+| 功能 | 状态 | 说明 |
+|------|------|------|
+| Resilience4j 熔断 | ✅ 完成 | LLM、Parse Worker 熔断 + fallback |
+| Resilience4j 限流 | ✅ 完成 | Parse / Diagnosis / Workflow 启动限流 |
+| 前端降级提示 | ✅ 完成 | 统一拦截 429/503，Toast 提示“服务繁忙” |
+| Qdrant 物理快照 | ✅ 完成 | point-level 快照（`qdrant-points.jsonl`），按仓库恢复 |
+| Neo4j 物理备份 | ✅ 完成 | APOC 流式导出，未安装时降级为手动 Cypher |
+| 本地备份存储 | ✅ 完成 | `BackupStorage` 管理 `backups/{repo}/{snapshotId}/` |
+| 自动备份任务 | ✅ 完成 | `SnapshotBackupJob` 每 6 小时补全缺失物理备份 |
+| 回滚 API | ✅ 完成 | `POST /api/data/snapshots/{id}/rollback` 物理恢复 |
+| 前端回滚/预览 | ✅ 完成 | 快照页面显示备份状态、差异预览、回滚确认 |
+
+---
+
 ## 技术债务与已知限制
 
 | 项目 | 影响 | 计划 |
@@ -148,9 +165,8 @@ IndexUpdateWorkflow
 | AdminController 指标为静态数据 | 指标数据不准确 | 接入 Micrometer 实时指标 |
 | WorkflowService.listWorkflows 返回空列表 | 无法列出历史工作流 | 基于快照表或 Temporal 列表 API 实现 |
 | 安全扫描引擎为占位实现 | 无实际安全检测能力 | v0.2 后续迭代实现 |
-| 熔断/限流未实现 | 高流量下无保护 | v0.2 后续迭代实现 |
-| RBAC 未实现 | 任意用户可访问所有功能 | v0.2 后续迭代实现 |
-| 快照回滚仅删除当前索引 | MVP 回滚不恢复完整历史数据 | v0.5 RC 引入物理快照备份 |
+| RBAC 未实现 | 任意用户可访问所有功能 | v0.8 GA 实现 |
+| Neo4j 物理备份依赖 APOC 插件 | 未安装 APOC 时降级为手动 Cypher，性能略低 | 生产环境建议预装 APOC |
 
 ---
 
@@ -188,4 +204,5 @@ cd frontend && pnpm dev
 | `bf3db09` | Initial commit | 2026-07-16 |
 | `594fb22` | 完成多项功能开发与优化 | 2026-07-22 |
 | `d9d1908` | 完善控制平面工作流编排与前端管理界面 | 2026-07-30 |
-| `当前工作区` | 实现 v0.3 Beta 可验证性：快照、沙箱、版本对比、审计持久化 | 2026-07-31 |
+| `87845d6` | v0.5 RC：可恢复性 + 熔断限流 + 物理快照回滚 | 2026-08-01 |
+| `当前工作区` | 实现 v0.5 RC：物理快照、自动备份、回滚 API、前端回滚界面 | 2026-08-01 |
