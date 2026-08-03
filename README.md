@@ -51,14 +51,17 @@ docker-compose -f infrastructure/docker/docker-compose.yml up -d postgres qdrant
 # 2. 构建后端
 ./mvnw clean install
 
-# 3. 启动 data-plane（依赖 Qdrant/Neo4j，会自动连接配置的 Parse Workers）
-./mvnw -pl data-plane -am spring-boot:run
+# 3. 启动 control-plane（依赖 PostgreSQL/Temporal）
+./mvnw -pl control-plane/control-boot -am spring-boot:run
 
-# 4. 启动 Parse Workers
+# 4. 启动 data-plane（依赖 Qdrant/Neo4j，会自动连接配置的 Parse Workers）
+./mvnw -pl data-plane/data-boot -am spring-boot:run
+
+# 5. 启动 Parse Workers
 ./mvnw -pl parse-workers/java-parser spring-boot:run
 cd parse-workers/csharp-parser && dotnet run
 
-# 5. 启动前端
+# 6. 启动前端
 cd frontend && pnpm install && pnpm dev
 ```
 

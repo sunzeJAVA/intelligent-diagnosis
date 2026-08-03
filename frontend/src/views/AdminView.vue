@@ -1,154 +1,115 @@
 <template>
   <div class="w-full p-4 sm:p-6 lg:p-8 space-y-8">
-      <!-- Header -->
-      <div>
-        <h1 class="text-2xl font-bold text-dark-900 dark:text-white">系统管理</h1>
-        <p class="text-dark-500 dark:text-dark-400 text-sm mt-1">基础设施状态、配置管理和系统监控</p>
-      </div>
+    <!-- Header -->
+    <div>
+      <h1 class="text-2xl font-bold text-dark-900 dark:text-white">系统管理</h1>
+      <p class="text-dark-500 dark:text-dark-400 text-sm mt-1">基础设施状态、配置管理和系统监控</p>
+    </div>
 
-      <!-- Infrastructure Status -->
-      <div>
-        <h2 class="text-sm font-semibold text-dark-700 dark:text-dark-200 uppercase tracking-wider mb-3">基础设施状态</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div v-for="infra in infrastructures" :key="infra.name" class="card dark:card-dark p-5">
-            <div class="flex items-center justify-between mb-3">
-              <div class="flex items-center gap-3">
-                <div
-                  class="flex h-10 w-10 items-center justify-center rounded-lg"
-                  :class="infra.connected ? 'bg-green-50 dark:bg-green-600/20' : 'bg-red-50 dark:bg-red-600/20'"
-                >
-                  <component :is="infra.icon" class="h-5 w-5" :class="infra.connected ? 'text-green-600' : 'text-red-600'" />
-                </div>
-                <div>
-                  <h3 class="font-semibold text-dark-800 dark:text-white">{{ infra.name }}</h3>
-                  <p class="text-xs text-dark-400 dark:text-dark-500">{{ infra.type }}</p>
-                </div>
-              </div>
-              <span
-                class="flex items-center gap-1.5 text-xs font-medium"
-                :class="infra.connected ? 'text-green-600' : 'text-red-600'"
-              >
-                <span class="h-1.5 w-1.5 rounded-full" :class="infra.connected ? 'bg-green-500 animate-pulse' : 'bg-red-500'"></span>
-                {{ infra.connected ? '已连接' : '未连接' }}
+    <!-- Infrastructure Status -->
+    <div>
+      <h2 class="text-base font-semibold text-dark-900 dark:text-white mb-3">基础设施状态</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div v-for="infra in infrastructures" :key="infra.name" class="card dark:card-dark p-5">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h3 class="text-sm font-semibold text-dark-900 dark:text-white">{{ infra.name }}</h3>
+              <p class="text-xs text-dark-500 dark:text-dark-400 mt-0.5">{{ infra.type }}</p>
+            </div>
+            <span class="flex items-center gap-1.5 text-xs font-medium" :class="infra.connected ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'">
+              <span class="h-2 w-2 rounded-full" :class="infra.connected ? 'bg-emerald-500' : 'bg-red-500'"></span>
+              {{ infra.connected ? '已连接' : '未连接' }}
+            </span>
+          </div>
+          <div class="space-y-1.5 text-sm">
+            <div class="flex items-center justify-between">
+              <span class="text-dark-500 dark:text-dark-400">地址</span>
+              <span class="font-mono text-xs text-dark-700 dark:text-dark-200">{{ infra.url }}</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-dark-500 dark:text-dark-400">延迟</span>
+              <span class="font-mono text-xs" :class="infra.latency < 50 ? 'text-emerald-600' : infra.latency < 200 ? 'text-amber-600' : 'text-red-600'">
+                {{ infra.latency }}ms
               </span>
             </div>
-            <div class="space-y-1.5 text-sm">
-              <div class="flex items-center justify-between">
-                <span class="text-dark-400 dark:text-dark-500">地址</span>
-                <span class="font-mono text-xs text-dark-600 dark:text-dark-300">{{ infra.url }}</span>
-              </div>
-              <div class="flex items-center justify-between">
-                <span class="text-dark-400 dark:text-dark-500">延迟</span>
-                <span class="font-mono text-xs" :class="infra.latency < 50 ? 'text-green-600' : infra.latency < 200 ? 'text-amber-600' : 'text-red-600'">
-                  {{ infra.latency }}ms
-                </span>
-              </div>
-              <div v-if="infra.version" class="flex items-center justify-between">
-                <span class="text-dark-400 dark:text-dark-500">版本</span>
-                <span class="font-mono text-xs text-dark-600 dark:text-dark-300">{{ infra.version }}</span>
-              </div>
+            <div v-if="infra.version" class="flex items-center justify-between">
+              <span class="text-dark-500 dark:text-dark-400">版本</span>
+              <span class="font-mono text-xs text-dark-700 dark:text-dark-200">{{ infra.version }}</span>
             </div>
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- Parse Workers -->
-      <div>
-        <h2 class="text-sm font-semibold text-dark-700 dark:text-dark-200 uppercase tracking-wider mb-3">Parse Workers</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div v-for="worker in workers" :key="worker.name" class="card dark:card-dark p-5">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-3">
-                <div
-                  class="flex h-10 w-10 items-center justify-center rounded-lg"
-                  :class="worker.healthy ? 'bg-green-50 dark:bg-green-600/20' : 'bg-red-50 dark:bg-red-600/20'"
-                >
-                  <Code class="h-5 w-5" :class="worker.healthy ? 'text-green-600' : 'text-red-600'" />
-                </div>
-                <div>
-                  <h3 class="font-semibold text-dark-800 dark:text-white">{{ worker.name }}</h3>
-                  <p class="text-xs text-dark-400 dark:text-dark-500">{{ worker.language }}</p>
-                </div>
-              </div>
-              <div class="text-right">
-                <span
-                  class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium"
-                  :class="worker.healthy ? 'bg-green-100 text-green-700 dark:bg-green-600/20 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-600/20 dark:text-red-400'"
-                >
-                  <span class="h-1.5 w-1.5 rounded-full" :class="worker.healthy ? 'bg-green-500' : 'bg-red-500'"></span>
-                  {{ worker.healthy ? '健康' : '异常' }}
-                </span>
-                <p class="font-mono text-xs text-dark-400 dark:text-dark-500 mt-1">{{ worker.address }}</p>
-              </div>
+    <!-- Parse Workers -->
+    <div>
+      <h2 class="text-base font-semibold text-dark-900 dark:text-white mb-3">Parse Workers</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div v-for="worker in workers" :key="worker.name" class="card dark:card-dark p-5">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-sm font-semibold text-dark-900 dark:text-white">{{ worker.name }}</h3>
+              <p class="text-xs text-dark-500 dark:text-dark-400 mt-0.5">{{ worker.language }}</p>
+            </div>
+            <div class="flex flex-col items-end gap-1">
+              <span class="flex items-center gap-1.5 text-xs font-medium" :class="worker.healthy ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'">
+                <span class="h-2 w-2 rounded-full" :class="worker.healthy ? 'bg-emerald-500' : 'bg-red-500'"></span>
+                {{ worker.healthy ? '健康' : '异常' }}
+              </span>
+              <p class="font-mono text-xs text-dark-500 dark:text-dark-400">{{ worker.address }}</p>
             </div>
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- System Metrics -->
-      <div>
-        <h2 class="text-sm font-semibold text-dark-700 dark:text-dark-200 uppercase tracking-wider mb-3">系统指标</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div class="card dark:card-dark p-5">
-            <div class="flex items-center gap-2 mb-2">
-              <Database class="h-4 w-4 text-primary-600" />
-              <p class="text-xs font-medium text-dark-500 dark:text-dark-400">向量索引总数</p>
-            </div>
-            <p class="text-2xl font-bold text-dark-900 dark:text-white">{{ formatNumber(metrics.vectorCount) }}</p>
-            <p class="text-xs text-dark-400 dark:text-dark-500 mt-1">Qdrant</p>
-          </div>
-          <div class="card dark:card-dark p-5">
-            <div class="flex items-center gap-2 mb-2">
-              <Share2 class="h-4 w-4 text-blue-600" />
-              <p class="text-xs font-medium text-dark-500 dark:text-dark-400">图谱节点数</p>
-            </div>
-            <p class="text-2xl font-bold text-dark-900 dark:text-white">{{ formatNumber(metrics.graphNodes) }}</p>
-            <p class="text-xs text-dark-400 dark:text-dark-500 mt-1">Neo4j</p>
-          </div>
-          <div class="card dark:card-dark p-5">
-            <div class="flex items-center gap-2 mb-2">
-              <Link class="h-4 w-4 text-purple-600" />
-              <p class="text-xs font-medium text-dark-500 dark:text-dark-400">图谱关系数</p>
-            </div>
-            <p class="text-2xl font-bold text-dark-900 dark:text-white">{{ formatNumber(metrics.graphRelations) }}</p>
-            <p class="text-xs text-dark-400 dark:text-dark-500 mt-1">Neo4j</p>
-          </div>
-          <div class="card dark:card-dark p-5">
-            <div class="flex items-center gap-2 mb-2">
-              <Activity class="h-4 w-4 text-green-600" />
-              <p class="text-xs font-medium text-dark-500 dark:text-dark-400">诊断总次数</p>
-            </div>
-            <p class="text-2xl font-bold text-dark-900 dark:text-white">{{ formatNumber(metrics.diagnosisCount) }}</p>
-            <p class="text-xs text-dark-400 dark:text-dark-500 mt-1">累计</p>
-          </div>
+    <!-- System Metrics -->
+    <div>
+      <h2 class="text-base font-semibold text-dark-900 dark:text-white mb-3">系统指标</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="card dark:card-dark p-5">
+          <p class="text-xs font-medium text-dark-500 dark:text-dark-400">向量索引总数</p>
+          <p class="text-2xl font-bold text-dark-900 dark:text-white mt-2">{{ formatNumber(metrics.vectorCount) }}</p>
+          <p class="text-xs text-dark-500 dark:text-dark-400 mt-1">Qdrant</p>
+        </div>
+        <div class="card dark:card-dark p-5">
+          <p class="text-xs font-medium text-dark-500 dark:text-dark-400">图谱节点数</p>
+          <p class="text-2xl font-bold text-dark-900 dark:text-white mt-2">{{ formatNumber(metrics.graphNodes) }}</p>
+          <p class="text-xs text-dark-500 dark:text-dark-400 mt-1">Neo4j</p>
+        </div>
+        <div class="card dark:card-dark p-5">
+          <p class="text-xs font-medium text-dark-500 dark:text-dark-400">图谱关系数</p>
+          <p class="text-2xl font-bold text-dark-900 dark:text-white mt-2">{{ formatNumber(metrics.graphRelations) }}</p>
+          <p class="text-xs text-dark-500 dark:text-dark-400 mt-1">Neo4j</p>
+        </div>
+        <div class="card dark:card-dark p-5">
+          <p class="text-xs font-medium text-dark-500 dark:text-dark-400">诊断总次数</p>
+          <p class="text-2xl font-bold text-dark-900 dark:text-white mt-2">{{ formatNumber(metrics.diagnosisCount) }}</p>
+          <p class="text-xs text-dark-500 dark:text-dark-400 mt-1">累计</p>
         </div>
       </div>
+    </div>
 
-      <!-- Configuration -->
-      <div>
-        <h2 class="text-sm font-semibold text-dark-700 dark:text-dark-200 uppercase tracking-wider mb-3">系统配置</h2>
-        <div class="card dark:card-dark overflow-hidden">
-          <div class="divide-y divide-dark-100 dark:divide-dark-700">
-            <div v-for="config in configurations" :key="config.key" class="flex items-center justify-between px-5 py-4 hover:bg-dark-50 dark:hover:bg-dark-800/50 transition-colors">
-              <div class="flex items-center gap-3">
-                <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-dark-100 dark:bg-dark-800">
-                  <component :is="config.icon" class="h-4 w-4 text-dark-500 dark:text-dark-400" />
-                </div>
-                <div>
-                  <p class="text-sm font-medium text-dark-800 dark:text-white">{{ config.label }}</p>
-                  <p class="text-xs text-dark-400 dark:text-dark-500 font-mono">{{ config.key }}</p>
-                </div>
-              </div>
-              <div class="flex items-center gap-3">
-                <span class="text-sm text-dark-600 dark:text-dark-300 font-mono">{{ config.value }}</span>
-                <button class="text-dark-400 dark:text-dark-500 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
-                  <Pencil class="h-4 w-4" />
-                </button>
-              </div>
+    <!-- Configuration -->
+    <div>
+      <h2 class="text-base font-semibold text-dark-900 dark:text-white mb-3">系统配置</h2>
+      <div class="card dark:card-dark overflow-hidden">
+        <div class="divide-y divide-dark-100 dark:divide-dark-800">
+          <div v-for="config in configurations" :key="config.key" class="flex items-center justify-between px-5 py-4 hover:bg-dark-50 dark:hover:bg-dark-800/50 transition-colors">
+            <div>
+              <p class="text-sm font-medium text-dark-900 dark:text-white">{{ config.label }}</p>
+              <p class="text-xs text-dark-500 dark:text-dark-400 font-mono mt-0.5">{{ config.key }}</p>
+            </div>
+            <div class="flex items-center gap-4">
+              <span class="text-sm text-dark-700 dark:text-dark-200 font-mono">{{ config.value }}</span>
+              <button class="text-dark-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
+                <Pencil class="h-4 w-4" />
+              </button>
             </div>
           </div>
         </div>
       </div>
+    </div>
   </div>
 </template>
 
@@ -156,7 +117,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { controlApi } from '@/api/client'
 import {
-  Database, Share2, Link, Activity, Code, Server, Network,
+  Database, Server, Network,
   Cpu, Pencil, Settings, Brain, Zap
 } from 'lucide-vue-next'
 

@@ -26,7 +26,24 @@
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <mockito.version>5.14.2</mockito.version>
+        <!-- 统一 gRPC 版本，解决 temporal-sdk 与 qdrant-client 的版本冲突 -->
+        <grpc.version>1.59.0</grpc.version>
+        <!-- 建议统一 temporal-sdk 版本 -->
+        <temporal-sdk.version>1.26.1</temporal-sdk.version>
     </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- 统一所有 io.grpc 组件版本，覆盖传递依赖 -->
+            <dependency>
+                <groupId>io.grpc</groupId>
+                <artifactId>grpc-bom</artifactId>
+                <version>${grpc.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <build>
         <pluginManagement>

@@ -21,39 +21,36 @@
       <button @click="loadSnapshots" class="btn-primary dark:btn-primary-dark">查询</button>
     </div>
 
-    <div v-if="diff" class="card dark:card-dark p-4 space-y-2">
-      <h3 class="font-semibold text-dark-800 dark:text-white">差异报告</h3>
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-        <div>
-          <p class="text-dark-500 dark:text-dark-400">元素变化</p>
-          <p class="font-medium" :class="diff.elementDelta >= 0 ? 'text-green-600' : 'text-red-600'">
+    <div v-if="diff" class="card dark:card-dark p-4">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-sm font-semibold text-dark-800 dark:text-white">差异报告</h3>
+        <span class="text-xs text-dark-400 dark:text-dark-500 font-mono">
+          {{ diff.leftCommitHash.substring(0, 8) }} → {{ diff.rightCommitHash.substring(0, 8) }}
+        </span>
+      </div>
+      <div class="grid grid-cols-2 gap-6 text-sm">
+        <div class="flex items-baseline gap-2">
+          <span class="text-dark-500 dark:text-dark-400 text-xs">元素变化</span>
+          <span class="font-medium font-mono" :class="diff.elementDelta >= 0 ? 'text-emerald-600' : 'text-red-600'">
             {{ diff.elementDelta > 0 ? '+' : '' }}{{ diff.elementDelta }}
-          </p>
+          </span>
         </div>
-        <div>
-          <p class="text-dark-500 dark:text-dark-400">关系变化</p>
-          <p class="font-medium" :class="diff.relationDelta >= 0 ? 'text-green-600' : 'text-red-600'">
+        <div class="flex items-baseline gap-2">
+          <span class="text-dark-500 dark:text-dark-400 text-xs">关系变化</span>
+          <span class="font-medium font-mono" :class="diff.relationDelta >= 0 ? 'text-emerald-600' : 'text-red-600'">
             {{ diff.relationDelta > 0 ? '+' : '' }}{{ diff.relationDelta }}
-          </p>
-        </div>
-        <div>
-          <p class="text-dark-500 dark:text-dark-400">左侧 Commit</p>
-          <p class="font-medium text-dark-700 dark:text-dark-200">{{ diff.leftCommitHash.substring(0, 8) }}</p>
-        </div>
-        <div>
-          <p class="text-dark-500 dark:text-dark-400">右侧 Commit</p>
-          <p class="font-medium text-dark-700 dark:text-dark-200">{{ diff.rightCommitHash.substring(0, 8) }}</p>
+          </span>
         </div>
       </div>
     </div>
 
-    <div v-if="loading && snapshots.length === 0" class="flex items-center justify-center py-20">
-      <Loader2 class="h-8 w-8 animate-spin text-primary-500" />
+    <div v-if="loading && snapshots.length === 0" class="flex items-center justify-center py-16">
+      <Loader2 class="h-6 w-6 animate-spin text-primary-500" />
     </div>
 
-    <div v-else-if="snapshots.length === 0" class="card dark:card-dark p-12 text-center">
-      <h3 class="text-lg font-semibold text-dark-700 dark:text-white mb-1">暂无快照</h3>
-      <p class="text-dark-400 dark:text-dark-500 text-sm">触发索引更新工作流后将生成快照</p>
+    <div v-else-if="snapshots.length === 0" class="card dark:card-dark p-8 text-center">
+      <h3 class="text-sm font-semibold text-dark-700 dark:text-white">暂无快照</h3>
+      <p class="text-dark-400 dark:text-dark-500 text-xs mt-1">触发索引更新工作流后将生成快照</p>
     </div>
 
     <div v-else class="card dark:card-dark overflow-hidden">
@@ -61,19 +58,19 @@
         <table class="w-full">
           <thead>
             <tr class="border-b border-dark-200 dark:border-dark-700 bg-dark-50 dark:bg-dark-800">
-              <th class="px-4 py-3 text-left text-xs font-semibold text-dark-500 dark:text-dark-400 uppercase">快照</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-dark-500 dark:text-dark-400 uppercase">Commit</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-dark-500 dark:text-dark-400 uppercase">状态</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-dark-500 dark:text-dark-400 uppercase">元素/关系</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-dark-500 dark:text-dark-400 uppercase">物理备份</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-dark-500 dark:text-dark-400 uppercase">时间</th>
-              <th class="px-4 py-3 text-right text-xs font-semibold text-dark-500 dark:text-dark-400 uppercase">操作</th>
+              <th class="px-4 py-2.5 text-left text-xs font-medium text-dark-500 dark:text-dark-400">快照</th>
+              <th class="px-4 py-2.5 text-left text-xs font-medium text-dark-500 dark:text-dark-400">Commit</th>
+              <th class="px-4 py-2.5 text-left text-xs font-medium text-dark-500 dark:text-dark-400">状态</th>
+              <th class="px-4 py-2.5 text-left text-xs font-medium text-dark-500 dark:text-dark-400">元素/关系</th>
+              <th class="px-4 py-2.5 text-left text-xs font-medium text-dark-500 dark:text-dark-400">物理备份</th>
+              <th class="px-4 py-2.5 text-left text-xs font-medium text-dark-500 dark:text-dark-400">时间</th>
+              <th class="px-4 py-2.5 text-right text-xs font-medium text-dark-500 dark:text-dark-400">操作</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-dark-100 dark:divide-dark-700">
             <tr v-for="snapshot in snapshots" :key="snapshot.id" class="hover:bg-dark-50 dark:hover:bg-dark-800/50 transition-colors">
               <td class="px-4 py-3">
-                <p class="text-sm font-medium text-dark-800 dark:text-white">{{ snapshot.id.substring(0, 8) }}</p>
+                <p class="text-sm font-medium text-dark-800 dark:text-white font-mono">{{ snapshot.id.substring(0, 8) }}</p>
                 <p class="text-xs text-dark-400 dark:text-dark-500">{{ snapshot.workflowId || '-' }}</p>
               </td>
               <td class="px-4 py-3 text-sm text-dark-600 dark:text-dark-300 font-mono">
@@ -82,21 +79,21 @@
               <td class="px-4 py-3">
                 <span class="badge" :class="statusBadge(snapshot.status)">{{ snapshot.status }}</span>
               </td>
-              <td class="px-4 py-3 text-sm text-dark-600 dark:text-dark-300">
+              <td class="px-4 py-3 text-sm text-dark-600 dark:text-dark-300 font-mono">
                 {{ snapshot.elementCount }} / {{ snapshot.relationCount }}
               </td>
-              <td class="px-4 py-3 text-sm">
-                <div class="flex items-center gap-2">
+              <td class="px-4 py-3">
+                <div class="flex items-center gap-1">
                   <span
-                    class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
-                    :class="snapshot.qdrantSnapshotPath ? 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400' : 'bg-dark-100 text-dark-500 dark:bg-dark-800 dark:text-dark-400'"
+                    class="inline-flex items-center justify-center h-4 w-4 rounded text-[10px] font-medium leading-none"
+                    :class="snapshot.qdrantSnapshotPath ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-dark-100 text-dark-400 dark:bg-dark-800 dark:text-dark-500'"
                     title="Qdrant 向量快照"
                   >
                     Q
                   </span>
                   <span
-                    class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
-                    :class="snapshot.neo4jBackupPath ? 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400' : 'bg-dark-100 text-dark-500 dark:bg-dark-800 dark:text-dark-400'"
+                    class="inline-flex items-center justify-center h-4 w-4 rounded text-[10px] font-medium leading-none"
+                    :class="snapshot.neo4jBackupPath ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-dark-100 text-dark-400 dark:bg-dark-800 dark:text-dark-500'"
                     title="Neo4j 图备份"
                   >
                     N
@@ -111,21 +108,21 @@
                   <button
                     v-if="selectedLeft && selectedLeft !== snapshot.id"
                     @click="diffWithSelected(snapshot.id)"
-                    class="text-xs btn-primary dark:btn-primary-dark btn-sm"
+                    class="btn-primary dark:btn-primary-dark btn-sm"
                   >
                     对比
                   </button>
                   <button
                     v-else
                     @click="selectedLeft = snapshot.id"
-                    class="text-xs btn-secondary dark:btn-secondary-dark btn-sm"
+                    class="btn-secondary dark:btn-secondary-dark btn-sm"
                   >
                     选为左侧
                   </button>
                   <button
                     v-if="canPreview(snapshot)"
                     @click="previewDiff(snapshot.id)"
-                    class="text-xs btn-secondary dark:btn-secondary-dark btn-sm"
+                    class="btn-secondary dark:btn-secondary-dark btn-sm"
                   >
                     <Eye class="h-3 w-3" />
                     预览
@@ -134,7 +131,7 @@
                     v-if="canRollback(snapshot)"
                     @click="handleRollback(snapshot)"
                     :disabled="rollingBack === snapshot.id"
-                    class="text-xs btn-danger btn-sm"
+                    class="btn-danger btn-sm"
                   >
                     <RotateCcw v-if="rollingBack !== snapshot.id" class="h-3 w-3" />
                     <Loader2 v-else class="h-3 w-3 animate-spin" />

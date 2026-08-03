@@ -1,20 +1,17 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-dark-900 px-4">
-    <div class="w-full max-w-md card-dark p-8 animate-fade-in">
-      <div class="flex items-center justify-center gap-3 mb-8">
-        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary-400 to-primary-600">
-          <Stethoscope class="h-6 w-6 text-white" />
-        </div>
-        <div>
-          <h1 class="text-xl font-semibold text-white">智能诊断</h1>
-          <p class="text-sm text-dark-400">Code Intelligence</p>
-        </div>
+  <div class="min-h-screen flex items-center justify-center bg-dark-950 px-4">
+    <div class="w-full max-w-md bg-dark-900 rounded-xl border border-dark-800 p-8 animate-fade-in">
+      <div class="flex items-center justify-center gap-2.5 mb-8">
+        <Stethoscope class="h-6 w-6 text-primary-500" />
+        <h1 class="text-lg font-semibold text-white tracking-tight">智能诊断</h1>
       </div>
 
-      <h2 class="text-2xl font-bold text-white mb-2">欢迎回来</h2>
-      <p class="text-dark-400 mb-6">请登录以继续使用系统</p>
+      <div class="mb-6">
+        <h2 class="text-xl font-semibold text-white mb-1">欢迎回来</h2>
+        <p class="text-sm text-dark-400">请登录以继续使用系统</p>
+      </div>
 
-      <form class="space-y-5" @submit.prevent="handleLogin">
+      <form class="space-y-4" @submit.prevent="handleLogin">
         <div>
           <label class="block text-sm font-medium text-dark-300 mb-1.5">用户名</label>
           <input
@@ -43,7 +40,7 @@
 
         <button
           type="submit"
-          class="btn-primary w-full"
+          class="btn-primary w-full shadow-none"
           :disabled="loading || !username || !password"
         >
           <Loader2 v-if="loading" class="h-4 w-4 animate-spin" />
@@ -51,9 +48,8 @@
         </button>
       </form>
 
-      <p class="mt-6 text-center text-xs text-dark-500">
-        默认账号：admin / operator / viewer<br />
-        密码与用户名相同
+      <p class="mt-8 text-center text-xs text-dark-500">
+        Code Intelligence Platform
       </p>
     </div>
   </div>

@@ -17,7 +17,9 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
+    table: flyway_schema_history_data
     baseline-on-migrate: true
+    baseline-version: 0
   neo4j:
     uri: ${NEO4J_URI:bolt://localhost:7687}
     authentication:
@@ -29,7 +31,7 @@ server:
 
 security:
   jwt:
-    secret: ${JWT_SECRET:}
+    secret: ${JWT_SECRET:550e8400-e29b-41d4-a716-446655440000}
     expiration-ms: 86400000
     issuer: intelligent-diagnosis
   scan:
@@ -96,7 +98,7 @@ llm:
   provider: ${LLM_PROVIDER:openai}
   base-url: ${LLM_BASE_URL:https://api.deepseek.com}
   model: ${LLM_MODEL:deepseek-v4-flash}
-  api-key: ${LLM_API_KEY:}
+  api-key: ${LLM_API_KEY:sk-57d5c4140caf4dfdb16439e943885cfa}
   max-tokens: 2048
   timeout-seconds: 60
   # Multi-model fallback configuration. Clients are tried in order.

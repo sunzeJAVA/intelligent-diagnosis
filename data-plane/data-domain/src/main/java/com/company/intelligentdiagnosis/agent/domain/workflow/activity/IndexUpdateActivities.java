@@ -4,9 +4,11 @@ import com.company.intelligentdiagnosis.agent.domain.CodeElement;
 import com.company.intelligentdiagnosis.agent.domain.workflow.GitPushEvent;
 import com.company.intelligentdiagnosis.agent.domain.workflow.RiskLevel;
 import com.company.intelligentdiagnosis.agent.domain.workflow.SecurityScanResult;
+import io.temporal.activity.ActivityInterface;
 
 import java.util.List;
 
+@ActivityInterface
 public interface IndexUpdateActivities {
 
     void detectChanges(GitPushEvent event);

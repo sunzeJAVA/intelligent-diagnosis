@@ -9,6 +9,7 @@ import com.company.intelligentdiagnosis.security.SecurityProperties;
 import io.micrometer.core.instrument.Counter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.event.EventListener;
 import org.springframework.security.authentication.event.AbstractAuthenticationFailureEvent;
 import org.springframework.security.authentication.event.AuthenticationFailureBadCredentialsEvent;
@@ -42,15 +43,15 @@ public class AuthenticationEventListener {
     public AuthenticationEventListener(AuditService auditService,
                                        UserRepository userRepository,
                                        SecurityProperties securityProperties,
-                                       Counter securityLoginSuccessCounter,
-                                       Counter securityLoginFailureCounter,
-                                       Counter securityAccountLockedCounter) {
+                                       @Qualifier("securityLoginSuccessCounter") Counter loginSuccessCounter,
+                                       @Qualifier("securityLoginFailureCounter") Counter loginFailureCounter,
+                                       @Qualifier("securityAccountLockedCounter") Counter accountLockedCounter) {
         this.auditService = auditService;
         this.userRepository = userRepository;
         this.securityProperties = securityProperties;
-        this.loginSuccessCounter = securityLoginSuccessCounter;
-        this.loginFailureCounter = securityLoginFailureCounter;
-        this.accountLockedCounter = securityAccountLockedCounter;
+        this.loginSuccessCounter = loginSuccessCounter;
+        this.loginFailureCounter = loginFailureCounter;
+        this.accountLockedCounter = accountLockedCounter;
     }
 
     @EventListener

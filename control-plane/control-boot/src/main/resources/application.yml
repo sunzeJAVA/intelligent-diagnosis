@@ -17,14 +17,16 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
+    table: flyway_schema_history_control
     baseline-on-migrate: true
+    baseline-version: 0
 
 server:
   port: 8081
 
 security:
   jwt:
-    secret: ${JWT_SECRET:}
+    secret: ${JWT_SECRET:550e8400-e29b-41d4-a716-446655440000}
     expiration-ms: 86400000
     issuer: intelligent-diagnosis
   lockout:
