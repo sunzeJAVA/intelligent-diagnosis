@@ -49,13 +49,15 @@ public class DiagnosisController {
     }
 
     private DiagnosisResponseDto toDto(DiagnosisResponse response) {
+        DiagnosisIntentDto intentDto = response.intent() != null ? toDto(response.intent()) : null;
         return new DiagnosisResponseDto(
             response.summary(),
             response.rootCause(),
             response.suggestions(),
             response.relatedCode().stream()
                 .map(this::toDto)
-                .toList()
+                .toList(),
+            intentDto
         );
     }
 
@@ -65,6 +67,16 @@ public class DiagnosisController {
             snippet.startLine(),
             snippet.endLine(),
             snippet.content()
+        );
+    }
+
+    private DiagnosisIntentDto toDto(com.company.intelligentdiagnosis.agent.domain.diagnosis.DiagnosisIntent intent) {
+        return new DiagnosisIntentDto(
+            intent.type().name(),
+            intent.type().getDisplayName(),
+            intent.confidence(),
+            intent.entities(),
+            intent.enhancedQuery()
         );
     }
 
@@ -78,7 +90,8 @@ public class DiagnosisController {
         String summary,
         String rootCause,
         List<String> suggestions,
-        List<CodeSnippetDto> relatedCode
+        List<CodeSnippetDto> relatedCode,
+        DiagnosisIntentDto intent
     ) {}
 
     public record CodeSnippetDto(
@@ -86,5 +99,22 @@ public class DiagnosisController {
         int startLine,
         int endLine,
         String content
+    ) {}
+
+    /**
+     * 意图识别结果 DTO
+     *
+     * @param type          意图类型枚举名（大写）
+     * @param displayName   意图类型中文名
+     * @param confidence    置信度 0.0-1.0
+     * @param entities      关键实体列表
+     * @param enhancedQuery 增强后的检索关键词
+     */
+    public record DiagnosisIntentDto(
+        String type,
+        String displayName,
+        double confidence,
+        List<String> entities,
+        String enhancedQuery
     ) {}
 }

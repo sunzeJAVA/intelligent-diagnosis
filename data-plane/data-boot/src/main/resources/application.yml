@@ -49,6 +49,23 @@ management:
         enabled: true
       show-details: always
       show-components: always
+  tracing:
+    sampling:
+      probability: ${OTEL_TRACING_SAMPLING_PROBABILITY:1.0}
+  observations:
+    annotations:
+      enabled: true
+
+otel:
+  exporter:
+    otlp:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4317}
+      protocol: ${OTEL_EXPORTER_OTLP_PROTOCOL:grpc}
+  service:
+    name: data-plane
+  resource:
+    attributes:
+      deployment.environment: ${OTEL_RESOURCE_ENV:development}
 
 resilience4j:
   circuitbreaker:
@@ -98,7 +115,7 @@ llm:
   provider: ${LLM_PROVIDER:openai}
   base-url: ${LLM_BASE_URL:https://api.deepseek.com}
   model: ${LLM_MODEL:deepseek-v4-flash}
-  api-key: ${LLM_API_KEY:sk-57d5c4140caf4dfdb16439e943885cfa}
+  api-key: ${LLM_API_KEY:}
   max-tokens: 2048
   timeout-seconds: 60
   # Multi-model fallback configuration. Clients are tried in order.
@@ -150,4 +167,4 @@ temporal:
 
 logging:
   pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%X{traceId}] %-5level %logger{36} - %msg%n"
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [traceId=%X{traceId},spanId=%X{spanId}] %-5level %logger{36} - %msg%n"

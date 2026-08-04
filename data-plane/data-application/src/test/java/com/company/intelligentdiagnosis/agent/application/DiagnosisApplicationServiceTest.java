@@ -3,8 +3,11 @@ package com.company.intelligentdiagnosis.agent.application;
 import com.company.intelligentdiagnosis.agent.domain.diagnosis.CodeRetriever;
 import com.company.intelligentdiagnosis.agent.domain.diagnosis.CodeSnippet;
 import com.company.intelligentdiagnosis.agent.domain.diagnosis.DiagnosisAuditor;
+import com.company.intelligentdiagnosis.agent.domain.diagnosis.DiagnosisIntent;
 import com.company.intelligentdiagnosis.agent.domain.diagnosis.DiagnosisRequest;
 import com.company.intelligentdiagnosis.agent.domain.diagnosis.DiagnosisResponse;
+import com.company.intelligentdiagnosis.agent.domain.diagnosis.IntentRecognizer;
+import com.company.intelligentdiagnosis.agent.domain.diagnosis.IntentType;
 import com.company.intelligentdiagnosis.agent.domain.diagnosis.PolicyEngine;
 import com.company.intelligentdiagnosis.agent.domain.llm.LlmClient;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -41,6 +44,9 @@ class DiagnosisApplicationServiceTest {
     private PolicyEngine policyEngine;
 
     @Mock
+    private IntentRecognizer intentRecognizer;
+
+    @Mock
     private Counter diagnosisCounter;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -48,10 +54,12 @@ class DiagnosisApplicationServiceTest {
     @Test
     void shouldDiagnoseWithStructuredJsonResponse() {
         DiagnosisApplicationService service = new DiagnosisApplicationService(
-            codeRetriever, llmClient, auditor, policyEngine, objectMapper, diagnosisCounter
+            codeRetriever, llmClient, auditor, policyEngine, intentRecognizer, objectMapper, diagnosisCounter
         );
 
         DiagnosisRequest request = new DiagnosisRequest("query", "error", "svc", "user", "tenant");
+        // 意图识别返回 unknown 且 enhancedQuery 等于原 query，确保 retrieve 接收原始 request
+        when(intentRecognizer.recognize(request)).thenReturn(DiagnosisIntent.unknown("query"));
         CodeSnippet snippet = new CodeSnippet("src/Main.java", 1, 5, "class Main {}");
         when(codeRetriever.retrieve(request)).thenReturn(List.of(snippet));
         when(llmClient.complete(anyString(), anyString())).thenReturn("""
@@ -68,6 +76,8 @@ class DiagnosisApplicationServiceTest {
         assertThat(response.rootCause()).isEqualTo("root cause");
         assertThat(response.suggestions()).containsExactly("fix 1");
         assertThat(response.relatedCode()).containsExactly(snippet);
+        assertThat(response.intent()).isNotNull();
+        assertThat(response.intent().type()).isEqualTo(IntentType.UNKNOWN);
 
         ArgumentCaptor<DiagnosisResponse> responseCaptor = ArgumentCaptor.forClass(DiagnosisResponse.class);
         verify(auditor).record(eq(request), responseCaptor.capture(), anyLong());
@@ -77,10 +87,11 @@ class DiagnosisApplicationServiceTest {
     @Test
     void shouldStripMarkdownFencesFromJsonResponse() {
         DiagnosisApplicationService service = new DiagnosisApplicationService(
-            codeRetriever, llmClient, auditor, policyEngine, objectMapper, diagnosisCounter
+            codeRetriever, llmClient, auditor, policyEngine, intentRecognizer, objectMapper, diagnosisCounter
         );
 
         DiagnosisRequest request = new DiagnosisRequest("query", "error", "svc", "user", "tenant");
+        when(intentRecognizer.recognize(request)).thenReturn(DiagnosisIntent.unknown("query"));
         when(codeRetriever.retrieve(request)).thenReturn(List.of());
         when(llmClient.complete(anyString(), anyString())).thenReturn("""
             ```json
@@ -102,10 +113,11 @@ class DiagnosisApplicationServiceTest {
     @Test
     void shouldFallbackWhenLlmReturnsInvalidJson() {
         DiagnosisApplicationService service = new DiagnosisApplicationService(
-            codeRetriever, llmClient, auditor, policyEngine, objectMapper, diagnosisCounter
+            codeRetriever, llmClient, auditor, policyEngine, intentRecognizer, objectMapper, diagnosisCounter
         );
 
         DiagnosisRequest request = new DiagnosisRequest("query", "error", "svc", "user", "tenant");
+        when(intentRecognizer.recognize(request)).thenReturn(DiagnosisIntent.unknown("query"));
         when(codeRetriever.retrieve(request)).thenReturn(List.of());
         when(llmClient.complete(anyString(), anyString())).thenReturn("plain text");
 

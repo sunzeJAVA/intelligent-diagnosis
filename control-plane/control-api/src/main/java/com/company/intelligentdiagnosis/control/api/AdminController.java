@@ -1,6 +1,8 @@
 package com.company.intelligentdiagnosis.control.api;
 
+import com.company.intelligentdiagnosis.control.infrastructure.config.SystemConfigurationService;
 import com.company.intelligentdiagnosis.control.infrastructure.health.HealthCheckService;
+import com.company.intelligentdiagnosis.control.infrastructure.health.ParseWorkerHealthChecker;
 import com.company.intelligentdiagnosis.control.infrastructure.metrics.DataPlaneMetricsClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,7 +11,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -20,11 +21,17 @@ public class AdminController {
 
     private final HealthCheckService healthCheckService;
     private final DataPlaneMetricsClient metricsClient;
+    private final ParseWorkerHealthChecker parseWorkerHealthChecker;
+    private final SystemConfigurationService configurationService;
 
     public AdminController(HealthCheckService healthCheckService,
-                           DataPlaneMetricsClient metricsClient) {
+                           DataPlaneMetricsClient metricsClient,
+                           ParseWorkerHealthChecker parseWorkerHealthChecker,
+                           SystemConfigurationService configurationService) {
         this.healthCheckService = healthCheckService;
         this.metricsClient = metricsClient;
+        this.parseWorkerHealthChecker = parseWorkerHealthChecker;
+        this.configurationService = configurationService;
     }
 
     @GetMapping("/metrics")
@@ -40,14 +47,9 @@ public class AdminController {
             ));
         }
 
-        log.warn("Returning fallback static metrics because data-plane is unavailable");
-        MetricsDto fallback = new MetricsDto(
-            15482L,
-            8934L,
-            23107L,
-            1267L
-        );
-        return ResponseEntity.ok(fallback);
+        // 数据平面不可用时返回零值，前端据此展示"暂时不可用"
+        log.warn("Data-plane unavailable, returning zero metrics");
+        return ResponseEntity.ok(new MetricsDto(0, 0, 0, 0));
     }
 
     @GetMapping("/infrastructures")
@@ -61,45 +63,26 @@ public class AdminController {
                 h.url(),
                 h.connected(),
                 h.latency(),
-                h.connected() ? getVersion(h.name()) : "-"
+                h.version()
             ))
             .collect(Collectors.toList());
         return ResponseEntity.ok(infrastructures);
     }
 
-    private String getVersion(String name) {
-        return switch (name) {
-            case "PostgreSQL" -> "16.2";
-            case "Qdrant" -> "1.10.0";
-            case "Neo4j" -> "5.20.0";
-            case "Temporal" -> "1.24.3";
-            case "Redis" -> "7.2.0";
-            default -> "-";
-        };
+    @GetMapping("/parse-workers")
+    @PreAuthorize("hasAuthority('admin:read')")
+    public ResponseEntity<List<ParseWorkerDto>> listParseWorkers() {
+        return ResponseEntity.ok(parseWorkerHealthChecker.checkAll().stream()
+            .map(h -> new ParseWorkerDto(h.name(), h.language(), h.address(), h.healthy(), h.latency()))
+            .collect(Collectors.toList()));
     }
 
     @GetMapping("/configurations")
     @PreAuthorize("hasAuthority('admin:read')")
     public ResponseEntity<List<ConfigurationDto>> listConfigurations() {
-        List<ConfigurationDto> configurations = List.of(
-            new ConfigurationDto("diagnosis.llm.model", "LLM 模型", "gpt-4o"),
-            new ConfigurationDto("diagnosis.llm.temperature", "LLM 温度", "0.3"),
-            new ConfigurationDto("diagnosis.llm.timeout", "LLM 超时", "30s"),
-            new ConfigurationDto("rag.vector.topK", "向量检索 TopK", "10"),
-            new ConfigurationDto("rag.graph.maxDepth", "图检索最大深度", "3"),
-            new ConfigurationDto("index.batchSize", "索引批量大小", "100"),
-            new ConfigurationDto("security.maxQuerySize", "最大查询大小", "4096")
-        );
-        return ResponseEntity.ok(configurations);
-    }
-
-    @PutMapping("/configurations/{key}")
-    @PreAuthorize("hasAuthority('admin:write')")
-    public ResponseEntity<Void> updateConfiguration(
-            @PathVariable String key,
-            @RequestBody Map<String, String> body) {
-        String value = body.get("value");
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(configurationService.listConfigurations().stream()
+            .map(c -> new ConfigurationDto(c.key(), c.label(), c.value(), c.source()))
+            .collect(Collectors.toList()));
     }
 
     public record MetricsDto(
@@ -118,9 +101,18 @@ public class AdminController {
         String version
     ) {}
 
+    public record ParseWorkerDto(
+        String name,
+        String language,
+        String address,
+        boolean healthy,
+        int latency
+    ) {}
+
     public record ConfigurationDto(
         String key,
         String label,
-        String value
+        String value,
+        String source
     ) {}
 }

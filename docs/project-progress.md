@@ -1,6 +1,6 @@
 # 项目进度跟踪
 
-**更新日期**: 2026-08-01
+**更新日期**: 2026-08-04
 **当前版本**: v0.8 GA 已完成
 **对照架构文档**: v2.1 受控工程
 
@@ -10,7 +10,7 @@
 
 | 版本 | 主题 | 状态 | 完成度 |
 |------|------|------|--------|
-| v0.1 MVP | 可观察性基础 | ✅ 已完成 | 90% |
+| v0.1 MVP | 可观察性基础 | ✅ 已完成 | 100% |
 | v0.2 Alpha | 可控制 | ✅ 已完成 | 85% |
 | v0.3 Beta | 可验证 | ✅ 已完成 | 90% |
 | v0.5 RC | 可恢复 | ✅ 已完成 | 90% |
@@ -23,13 +23,13 @@
 
 | 功能 | 状态 | 说明 |
 |------|------|------|
-| 结构化日志 | ✅ 完成 | SLF4J + Logback |
+| 结构化日志 | ✅ 完成 | SLF4J + Logback，日志注入 traceId/spanId |
 | API 端点暴露 | ✅ 完成 | 控制平面 + 数据平面 REST API |
 | 前端 UI 基础 | ✅ 完成 | Vue 3 + Tailwind CSS |
 | 诊断功能 | ✅ 完成 | Mock LLM + RAG 检索 |
 | 仓库管理 | ✅ 完成 | CRUD + Git 同步 |
-| Metrics 指标 | ⚠️ 部分 | 静态 Mock 数据，待接入 Micrometer |
-| OpenTelemetry Trace | ⬜ 未开始 | 待接入 |
+| Metrics 指标 | ✅ 完成 | Micrometer 实时指标（v0.8 Phase E 已替换静态数据） |
+| OpenTelemetry Trace | ✅ 完成 | micrometer-tracing-bridge-otel + OTLP 导出至 Jaeger |
 
 ---
 
@@ -161,7 +161,7 @@ IndexUpdateWorkflow
 
 ---
 
-## v0.8 GA — 安全默认（进行中）
+## v0.8 GA — 安全默认
 
 | 功能 | 状态 | 说明 |
 |------|------|------|
@@ -176,7 +176,9 @@ IndexUpdateWorkflow
 | Micrometer 实时指标 | ✅ 完成 | `/api/data/metrics` + Micrometer Counter/Gauge，AdminController 调用实时数据 |
 | 安全事件监控告警 | ✅ 完成 | Micrometer Counter + Gauge + 定时异常检测（暴力破解） |
 | 修复 WorkflowService.listWorkflows 空列表 | ✅ 完成 | 基于快照表派生 `/api/data/workflows`，控制平面聚合 |
-| 安全扫描引擎 | ✅ 完成 | 基于正则的本地静态扫描：硬编码凭证、SQL 注入、弱哈希等 |
+| 安全扫描引擎 | ✅ 完成 | 15 条 OWASP 规则：硬编码凭证、SQL 注入、XSS、路径穿越、弱加密、eval、TLS 禁用、XXE、开放重定向等 |
+| OpenTelemetry 链路追踪 | ✅ 完成 | micrometer-tracing-bridge-otel + OTLP → Jaeger，关键业务 `@Observed` |
+| Neo4j 备份可观测性增强 | ✅ 完成 | APOC 探测缓存 + Micrometer Gauge/Counter 暴露降级状态 |
 
 ---
 
@@ -184,8 +186,10 @@ IndexUpdateWorkflow
 
 | 项目 | 影响 | 计划 |
 |------|------|------|
-| RBAC + 审计 + 安全扫描已实现 | 方法级权限、登录审计、账户锁定、静态安全扫描已上线 | v0.8 GA 已完成 |
-| Neo4j 物理备份依赖 APOC 插件 | 未安装 APOC 时降级为手动 Cypher，性能略低 | 生产环境建议预装 APOC |
+| OpenTelemetry Trace | ✅ 已接入：micrometer-tracing-bridge-otel + OTLP 导出至 Jaeger，关键流程 `@Observed` | v0.1 遗留已清偿 |
+| 安全扫描引擎 | ✅ 已增强至 15 条 OWASP 规则（正则），覆盖 XSS/路径穿越/弱加密/XXE/开放重定向等 | 后续可集成 Semgrep |
+| Neo4j 物理备份依赖 APOC 插件 | APOC 不可用时降级为手动 Cypher；已缓存探测 + Gauge 暴露状态 | 生产环境建议预装 APOC |
+| 远程仓库 API Key 历史 | `cefb9c5` 已从本地历史移除硬编码 Key | 需用户确认远程历史已清理 |
 
 ---
 
@@ -197,8 +201,8 @@ export JWT_SECRET="your-32-bytes-or-longer-secret-key-here"
 export SECURITY_LOCKOUT_MAX_ATTEMPTS=5
 export SECURITY_LOCKOUT_DURATION_MINUTES=30
 
-# 1. 基础设施
-cd infrastructure/docker && docker-compose up -d postgres qdrant neo4j temporal temporal-db
+# 1. 基础设施（含 Jaeger 链路追踪）
+cd infrastructure/docker && docker-compose up -d postgres qdrant neo4j temporal temporal-db jaeger
 
 # 2. 控制平面
 cd control-plane/control-boot && mvn spring-boot:run
@@ -215,6 +219,7 @@ cd frontend && pnpm dev
 - 控制平面 API: http://localhost:8081
 - 数据平面 API: http://localhost:8082
 - Temporal: http://localhost:7233
+- Jaeger UI（链路追踪）: http://localhost:16686
 - PostgreSQL: localhost:5432
 - Qdrant: localhost:6333
 - Neo4j: localhost:7687
@@ -222,6 +227,7 @@ cd frontend && pnpm dev
 内部调用说明：
 - 控制平面调用数据平面（`/api/data/metrics`、`/api/data/workflows`）时使用服务账号 JWT，需在两端配置相同的 `JWT_SECRET`。
 - 默认管理员账号：`admin` / `admin`。
+- 链路追踪：控制平面与数据平面均通过 OTLP（gRPC 4317）将 Trace 上报至 Jaeger，可在 http://localhost:16686 查询。日志已注入 `traceId`/`spanId` 便于关联。
 
 ---
 

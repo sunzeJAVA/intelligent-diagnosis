@@ -15,6 +15,15 @@ export interface DiagnosisResponse {
   rootCause: string
   suggestions: string[]
   relatedCode: CodeSnippet[]
+  intent?: DiagnosisIntent
+}
+
+export interface DiagnosisIntent {
+  type: string
+  displayName: string
+  confidence: number
+  entities: string[]
+  enhancedQuery: string
 }
 
 export interface CodeSnippet {

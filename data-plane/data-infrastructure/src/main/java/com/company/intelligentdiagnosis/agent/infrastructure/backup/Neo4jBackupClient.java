@@ -1,5 +1,8 @@
 package com.company.intelligentdiagnosis.agent.infrastructure.backup;
 
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.observation.annotation.Observed;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.Record;
 import org.neo4j.driver.Result;
@@ -16,12 +19,18 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Neo4j 图索引物理备份客户端
  * <p>
  * 优先尝试使用 APOC 的 <code>apoc.export.cypher.query</code> 以流式方式导出 Cypher 语句；
  * 当 Neo4j 未安装 APOC 插件时，自动降级为手动生成 MERGE 语句，保证备份/恢复能力可用。
+ * <p>
+ * APOC 可用性在首次调用时探测并缓存，避免每次备份都发起探测查询；
+ * 通过 Micrometer 暴露 <code>neo4j.backup.apoc.available</code> Gauge 与
+ * <code>neo4j.backup.operations</code> Counter（tag: mode=apoc|manual, outcome=success|failure），
+ * 便于运维感知降级状态。
  */
 @Component
 public class Neo4jBackupClient {
@@ -32,33 +41,56 @@ public class Neo4jBackupClient {
 
     private final Driver driver;
     private final BackupStorage backupStorage;
+    private final Counter backupOperationsCounter;
 
-    public Neo4jBackupClient(Driver driver, BackupStorage backupStorage) {
+    // 0 = not probed, 1 = available, -1 = unavailable
+    private final AtomicInteger apocAvailable = new AtomicInteger(0);
+
+    public Neo4jBackupClient(Driver driver, BackupStorage backupStorage, MeterRegistry meterRegistry) {
         this.driver = driver;
         this.backupStorage = backupStorage;
+        this.backupOperationsCounter = Counter.builder("neo4j.backup.operations")
+            .description("Neo4j backup operations")
+            .tag("component", "neo4j-backup")
+            .register(meterRegistry);
+
+        // Expose APOC availability as a gauge for observability
+        meterRegistry.gauge("neo4j.backup.apoc.available",
+            List.of(),
+            apocAvailable,
+            state -> state.get() > 0 ? 1.0 : 0.0);
     }
 
     /**
      * 为指定仓库创建 Neo4j 图备份，返回本地备份文件绝对路径
      */
+    @Observed(name = "neo4j.backup.create", contextualName = "create-backup", lowCardinalityKeyValues = {"flow", "backup"})
     public String createBackup(String repositoryName, String snapshotId) {
         boolean apocAvailable = isApocAvailable();
         String cypher;
-        if (apocAvailable) {
-            cypher = exportWithApoc(repositoryName);
-            log.info("Created Neo4j backup using APOC for repository {} snapshot {}", repositoryName, snapshotId);
-        } else {
-            cypher = exportManually(repositoryName);
-            log.info("Created Neo4j backup using manual Cypher export for repository {} snapshot {}", repositoryName, snapshotId);
-        }
+        try {
+            if (apocAvailable) {
+                cypher = exportWithApoc(repositoryName);
+                log.info("Created Neo4j backup using APOC for repository {} snapshot {}", repositoryName, snapshotId);
+            } else {
+                cypher = exportManually(repositoryName);
+                log.warn("Created Neo4j backup using manual Cypher export (APOC not available) for repository {} snapshot {}",
+                    repositoryName, snapshotId);
+            }
 
-        Path path = backupStorage.writeString(repositoryName, snapshotId, BACKUP_FILE, cypher);
-        return path.toAbsolutePath().toString();
+            Path path = backupStorage.writeString(repositoryName, snapshotId, BACKUP_FILE, cypher);
+            backupOperationsCounter.increment();
+            return path.toAbsolutePath().toString();
+        } catch (RuntimeException e) {
+            log.error("Neo4j backup failed for repository {} snapshot {}: {}", repositoryName, snapshotId, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
      * 从本地 Cypher 备份文件恢复指定仓库的图数据
      */
+    @Observed(name = "neo4j.backup.restore", contextualName = "restore-backup", lowCardinalityKeyValues = {"flow", "backup"})
     public void restoreBackup(String repositoryName, String snapshotId) {
         Path file = backupStorage.resolveSnapshotDir(repositoryName, snapshotId).resolve(BACKUP_FILE);
         if (!Files.isRegularFile(file)) {
@@ -86,14 +118,25 @@ public class Neo4jBackupClient {
             repositoryName, snapshotId, statements.size());
     }
 
+    /**
+     * 探测 APOC 是否可用，结果缓存避免重复探测。
+     * 首次调用发起查询，后续直接返回缓存值。
+     */
     private boolean isApocAvailable() {
+        int cached = apocAvailable.get();
+        if (cached != 0) {
+            return cached > 0;
+        }
+        boolean available;
         try (Session session = driver.session()) {
             session.run(APOC_VERSION_QUERY).consume();
-            return true;
+            available = true;
         } catch (Exception e) {
             log.debug("APOC plugin not available: {}", e.getMessage());
-            return false;
+            available = false;
         }
+        apocAvailable.set(available ? 1 : -1);
+        return available;
     }
 
     private String exportWithApoc(String repositoryName) {

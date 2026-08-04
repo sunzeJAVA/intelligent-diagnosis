@@ -1,14 +1,17 @@
 package com.company.intelligentdiagnosis.control.infrastructure.security;
 
 import com.company.intelligentdiagnosis.security.JwtTokenProvider;
+import com.company.intelligentdiagnosis.security.Permission;
 import com.company.intelligentdiagnosis.security.SecurityUserDetails;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
+import java.util.Arrays;
 
 /**
  * 服务账号 JWT Token 提供者
  * 用于控制平面调用数据平面内部接口时的认证
+ * <p>
+ * 服务账号授予全部权限（与 ADMIN 角色一致），确保能访问数据平面所有受保护端点。
  */
 @Component
 public class ServiceAccountTokenProvider {
@@ -31,7 +34,7 @@ public class ServiceAccountTokenProvider {
         SecurityUserDetails serviceUser = new SecurityUserDetails(
             SERVICE_ACCOUNT,
             "",
-            List.of("ADMIN"),
+            Arrays.stream(Permission.values()).map(Permission::authority).toList(),
             true
         );
         return jwtTokenProvider.generateToken(serviceUser);

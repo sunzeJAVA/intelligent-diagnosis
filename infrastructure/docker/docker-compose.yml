@@ -97,6 +97,16 @@ services:
     ports:
       - "8233:8080"
 
+  jaeger:
+    image: jaegertracing/all-in-one:1.62
+    container_name: id-jaeger
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    ports:
+      - "16686:16686"   # Jaeger UI
+      - "4317:4317"     # OTLP gRPC
+      - "4318:4318"     # OTLP HTTP
+
   control-plane:
     build:
       context: ../../
@@ -113,6 +123,8 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       TEMPORAL_HOST: temporal
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
+      OTEL_RESOURCE_ENV: docker
     ports:
       - "8081:8081"
 
@@ -136,6 +148,8 @@ services:
       JAVA_PARSER_PORT: 9093
       CSHARP_PARSER_HOST: csharp-parser
       CSHARP_PARSER_PORT: 9094
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
+      OTEL_RESOURCE_ENV: docker
     ports:
       - "8082:8082"
 

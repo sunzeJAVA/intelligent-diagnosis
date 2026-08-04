@@ -45,12 +45,11 @@
               <label class="text-sm font-medium text-dark-700 dark:text-dark-200">目标服务</label>
               <span class="text-xs text-dark-400 dark:text-dark-500">* 必填</span>
             </div>
-            <select v-model="selectedService" class="select dark:select-dark w-full">
-              <option value="">选择服务...</option>
-              <option value="payment-service">payment-service</option>
-              <option value="user-service">user-service</option>
-              <option value="order-service">order-service</option>
-              <option value="skykiwi-news-server">skykiwi-news-server</option>
+            <select v-model="selectedService" class="select dark:select-dark w-full" :disabled="servicesLoading">
+              <option value="">{{ servicesLoading ? '加载中...' : (services.length === 0 ? '暂无可用仓库' : '选择服务...') }}</option>
+              <option v-for="repo in services" :key="repo.name" :value="repo.name">
+                {{ repo.displayName || repo.name }}
+              </option>
             </select>
           </div>
 
@@ -109,6 +108,39 @@
       <div class="card dark:card-dark p-6 border-l-2 border-l-primary-500">
         <h3 class="text-base font-semibold text-dark-900 dark:text-white mb-3">诊断摘要</h3>
         <p class="text-sm text-dark-600 dark:text-dark-300 leading-relaxed">{{ result.summary }}</p>
+      </div>
+
+      <!-- Intent Recognition Result -->
+      <div v-if="result.intent" class="card dark:card-dark p-5">
+        <div class="flex flex-wrap items-center gap-4">
+          <div class="flex items-center gap-2">
+            <Sparkles class="h-4 w-4 text-primary-500" />
+            <span class="text-xs font-medium text-dark-500 dark:text-dark-400">意图识别</span>
+          </div>
+          <!-- Intent Type Badge -->
+          <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-primary-50 text-primary-700 dark:bg-primary-600/15 dark:text-primary-400">
+            {{ result.intent.displayName }}
+          </span>
+          <!-- Confidence -->
+          <div class="flex items-center gap-1.5">
+            <span class="text-xs text-dark-400 dark:text-dark-500">置信度</span>
+            <div class="w-16 h-1.5 rounded-full bg-dark-100 dark:bg-dark-700 overflow-hidden">
+              <div class="h-full rounded-full bg-primary-500 transition-all" :style="{ width: `${Math.round(result.intent.confidence * 100)}%` }"></div>
+            </div>
+            <span class="text-xs font-mono text-dark-600 dark:text-dark-300">{{ (result.intent.confidence * 100).toFixed(0) }}%</span>
+          </div>
+          <!-- Entities -->
+          <div v-if="result.intent.entities.length > 0" class="flex items-center gap-1.5 flex-wrap">
+            <span class="text-xs text-dark-400 dark:text-dark-500">关键实体</span>
+            <span
+              v-for="entity in result.intent.entities"
+              :key="entity"
+              class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono bg-dark-100 text-dark-600 dark:bg-dark-800 dark:text-dark-300"
+            >
+              {{ entity }}
+            </span>
+          </div>
+        </div>
       </div>
 
       <!-- Root Cause & Suggestions Grid -->
@@ -181,8 +213,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { diagnose } from '@/api/diagnosis'
+import { listRepositories, type RepositoryConfig } from '@/api/repository'
 import type { DiagnosisResponse } from '@/types'
 import {
   Loader2, Sparkles, XCircle, FileCode, Stethoscope
@@ -194,6 +227,23 @@ const selectedService = ref('')
 const isLoading = ref(false)
 const result = ref<DiagnosisResponse | null>(null)
 const error = ref('')
+
+const services = ref<RepositoryConfig[]>([])
+const servicesLoading = ref(false)
+
+/**
+ * 加载已配置的仓库列表作为目标服务选项
+ */
+async function loadServices() {
+  servicesLoading.value = true
+  try {
+    services.value = (await listRepositories()).filter(r => r.enabled)
+  } catch {
+    services.value = []
+  } finally {
+    servicesLoading.value = false
+  }
+}
 
 /**
  * 执行智能诊断
@@ -220,4 +270,6 @@ const handleDiagnose = async () => {
     isLoading.value = false
   }
 }
+
+onMounted(loadServices)
 </script>
