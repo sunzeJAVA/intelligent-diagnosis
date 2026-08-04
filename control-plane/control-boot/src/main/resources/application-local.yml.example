@@ -1,0 +1,34 @@
+# 控制平面本地配置模板
+# 使用方法：
+#   1. 复制此文件为 application-local.yml
+#   2. 填入真实的密钥和配置
+#   3. application-local.yml 已被 .gitignore 忽略，不会提交
+#
+# 激活方式：
+#   - IDEA: VM options 添加 -Dspring.profiles.active=local
+#   - 命令行: mvn spring-boot:run -Dspring-boot.run.profiles=local
+#   - 环境变量: export SPRING_PROFILES_ACTIVE=local
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/control_plane
+    username: postgres
+    password: postgres
+
+# JWT 密钥：必须 32 字节以上，生产环境请使用强随机值
+security:
+  jwt:
+    secret: your-strong-jwt-secret-key-at-least-32-bytes-long
+
+# 数据平面地址
+data-plane:
+  base-url: http://localhost:8082
+
+# OpenTelemetry 链路追踪（本地 Jaeger）
+otel:
+  exporter:
+    otlp:
+      endpoint: http://localhost:4317
+  resource:
+    attributes:
+      deployment.environment: local

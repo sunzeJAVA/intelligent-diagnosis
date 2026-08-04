@@ -195,9 +195,38 @@ IndexUpdateWorkflow
 
 ## 服务启动命令
 
+### 方式一：本地 Profile 配置文件（推荐，密钥不进环境变量）
+
+```bash
+# 0. 复制配置模板并填入真实密钥（只需做一次）
+cp control-plane/control-boot/src/main/resources/application-local.yml.example \
+   control-plane/control-boot/src/main/resources/application-local.yml
+cp data-plane/data-boot/src/main/resources/application-local.yml.example \
+   data-plane/data-boot/src/main/resources/application-local.yml
+# 编辑 application-local.yml 填入 LLM_API_KEY、JWT_SECRET、REPOSITORY_ENCRYPTION_KEY 等
+
+# 1. 基础设施（含 Jaeger 链路追踪）
+cd infrastructure/docker && docker-compose up -d postgres qdrant neo4j temporal temporal-db jaeger
+
+# 2. 控制平面（激活 local profile）
+cd control-plane/control-boot && mvn spring-boot:run -Dspring-boot.run.profiles=local
+
+# 3. 数据平面（激活 local profile）
+cd data-plane/data-boot && mvn spring-boot:run -Dspring-boot.run.profiles=local
+
+# 4. 前端
+cd frontend && pnpm dev
+```
+
+IDEA 启动方式：在 Run Configuration 的 VM options 中添加 `-Dspring.profiles.active=local`
+
+### 方式二：环境变量注入
+
 ```bash
 # 0. 环境变量（必须）
 export JWT_SECRET="your-32-bytes-or-longer-secret-key-here"
+export REPOSITORY_ENCRYPTION_KEY="your-repository-encryption-key-32bytes"
+export LLM_API_KEY="your-llm-api-key"
 export SECURITY_LOCKOUT_MAX_ATTEMPTS=5
 export SECURITY_LOCKOUT_DURATION_MINUTES=30
 
