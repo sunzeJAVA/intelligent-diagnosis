@@ -9,8 +9,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 /**
  * Neo4j 图存储客户端
@@ -204,6 +208,163 @@ public class GraphStoreClient {
                 RETURN count(r) AS count
                 """, Values.parameters("repository", repository))
                 .single().get("count").asLong());
+        }
+    }
+
+    /**
+     * 按名称模糊查找节点（匹配 name 或 qualifiedName）
+     *
+     * @param repository  仓库名称
+     * @param namePattern 名称模糊匹配串
+     * @return 匹配的代码元素节点列表
+     */
+    public List<GraphCodeElement> findNodesByName(String repository, String namePattern) {
+        try (Session session = driver.session()) {
+            return session.executeRead(tx -> tx.run("""
+                MATCH (e:CodeElement {repository: $repository})
+                WHERE e.name CONTAINS $pattern OR e.qualifiedName CONTAINS $pattern
+                RETURN e
+                LIMIT 50
+                """, Values.parameters("repository", repository, "pattern", namePattern))
+                .list(record -> toGraphCodeElement(record.get("e").asNode())));
+        }
+    }
+
+    /**
+     * 按全限定名前缀查找节点
+     *
+     * @param repository           仓库名称
+     * @param qualifiedNamePrefix  全限定名前缀
+     * @return 匹配的代码元素节点列表
+     */
+    public List<GraphCodeElement> findNodesByQualifiedNamePrefix(String repository, String qualifiedNamePrefix) {
+        try (Session session = driver.session()) {
+            return session.executeRead(tx -> tx.run("""
+                MATCH (e:CodeElement {repository: $repository})
+                WHERE e.qualifiedName STARTS WITH $prefix
+                RETURN e
+                LIMIT 50
+                """, Values.parameters("repository", repository, "prefix", qualifiedNamePrefix))
+                .list(record -> toGraphCodeElement(record.get("e").asNode())));
+        }
+    }
+
+    /**
+     * 沿 CALLS 关系扩展调用链
+     * <p>
+     * 从指定节点出发，沿方法调用关系向外扩展指定深度，返回沿途所有方法节点。
+     * 使用 BFS 在应用层实现，避免依赖 Neo4j APOC 插件。
+     *
+     * @param repository 仓库名称
+     * @param nodeId     起始节点 ID
+     * @param depth      扩展深度（建议 1-3）
+     * @return 调用链上的所有节点（包含起始节点）
+     */
+    public List<GraphCodeElement> expandCallChain(String repository, String nodeId, int depth) {
+        if (depth < 1) {
+            return findNodeById(repository, nodeId).map(List::of).orElse(List.of());
+        }
+
+        List<GraphCodeElement> results = new ArrayList<>();
+        Set<String> visited = new HashSet<>();
+        List<String> currentLevelIds = List.of(nodeId);
+
+        // 先加入起始节点
+        findNodeById(repository, nodeId).ifPresent(startNode -> {
+            results.add(startNode);
+            visited.add(startNode.id());
+        });
+
+        for (int i = 0; i < depth && !currentLevelIds.isEmpty(); i++) {
+            List<GraphCodeElement> nextLevel = expandOneHop(repository, currentLevelIds, List.of("CALLS"));
+            currentLevelIds = new ArrayList<>();
+            for (GraphCodeElement element : nextLevel) {
+                if (visited.add(element.id())) {
+                    results.add(element);
+                    currentLevelIds.add(element.id());
+                }
+            }
+        }
+
+        return results;
+    }
+
+    /**
+     * 沿指定关系类型扩展一跳
+     *
+     * @param repository    仓库名称
+     * @param sourceIds     起始节点 ID 列表
+     * @param relationKinds 关系类型列表（如 CALLS、CONTAINS、EXTENDS 等）
+     * @return 扩展到的目标节点列表
+     */
+    public List<GraphCodeElement> expandOneHop(String repository, List<String> sourceIds, List<String> relationKinds) {
+        if (sourceIds == null || sourceIds.isEmpty() || relationKinds == null || relationKinds.isEmpty()) {
+            return List.of();
+        }
+
+        try (Session session = driver.session()) {
+            return session.executeRead(tx -> tx.run("""
+                UNWIND $sourceIds AS sourceId
+                MATCH (source:CodeElement {repository: $repository, id: sourceId})
+                      -[r:RELATES_TO]->(target:CodeElement {repository: $repository})
+                WHERE r.kind IN $relationKinds
+                RETURN DISTINCT target
+                """, Values.parameters(
+                    "repository", repository,
+                    "sourceIds", sourceIds,
+                    "relationKinds", relationKinds))
+                .list(record -> toGraphCodeElement(record.get("target").asNode())));
+        }
+    }
+
+    /**
+     * 根据节点 ID 查找单个节点
+     */
+    public Optional<GraphCodeElement> findNodeById(String repository, String nodeId) {
+        try (Session session = driver.session()) {
+            List<org.neo4j.driver.Record> records = session.executeRead(tx -> tx.run("""
+                MATCH (e:CodeElement {repository: $repository, id: $nodeId})
+                RETURN e
+                """, Values.parameters("repository", repository, "nodeId", nodeId)).list());
+            if (records.isEmpty()) {
+                return Optional.empty();
+            }
+            return Optional.of(toGraphCodeElement(records.get(0).get("e").asNode()));
+        }
+    }
+
+    /**
+     * 将 Neo4j 节点转换为 GraphCodeElement
+     */
+    private GraphCodeElement toGraphCodeElement(org.neo4j.driver.types.Node node) {
+        return new GraphCodeElement(
+            stringValue(node.get("id")),
+            stringValue(node.get("kind")),
+            stringValue(node.get("name")),
+            stringValue(node.get("qualifiedName")),
+            stringValue(node.get("filePath")),
+            intValue(node.get("startLine")),
+            intValue(node.get("endLine")),
+            stringValue(node.get("sourceCode")),
+            stringValue(node.get("documentation"))
+        );
+    }
+
+    private String stringValue(org.neo4j.driver.Value value) {
+        return value == null || value.isNull() ? "" : value.asString();
+    }
+
+    private int intValue(org.neo4j.driver.Value value) {
+        if (value == null || value.isNull()) {
+            return 0;
+        }
+        if (value.type().name().equals("INTEGER")) {
+            return (int) value.asLong();
+        }
+        try {
+            return Integer.parseInt(value.asString());
+        } catch (Exception e) {
+            return 0;
         }
     }
 

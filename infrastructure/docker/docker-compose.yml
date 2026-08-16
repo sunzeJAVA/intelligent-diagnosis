@@ -85,6 +85,17 @@ services:
       timeout: 5s
       retries: 10
 
+  redis:
+    image: redis:7-alpine
+    container_name: id-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   temporal-ui:
     image: temporalio/ui:latest
     container_name: id-temporal-ui
@@ -117,12 +128,16 @@ services:
         condition: service_healthy
       temporal:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: docker
       POSTGRES_HOST: postgres
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       TEMPORAL_HOST: temporal
+      REDIS_HOST: redis
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
       OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
       OTEL_RESOURCE_ENV: docker
     ports:
@@ -148,6 +163,9 @@ services:
       JAVA_PARSER_PORT: 9093
       CSHARP_PARSER_HOST: csharp-parser
       CSHARP_PARSER_PORT: 9094
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      REPOSITORY_ENCRYPTION_KEY: ${REPOSITORY_ENCRYPTION_KEY:?REPOSITORY_ENCRYPTION_KEY is required}
+      LLM_API_KEY: ${LLM_API_KEY}
       OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
       OTEL_RESOURCE_ENV: docker
     ports:

@@ -1,6 +1,7 @@
 package com.company.intelligentdiagnosis.agent.infrastructure.llm;
 
 import com.company.intelligentdiagnosis.agent.domain.llm.LlmClient;
+import com.company.intelligentdiagnosis.agent.domain.llm.LlmCompletion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,8 +25,9 @@ public class MockDiagnosisLlmClient implements LlmClient {
         """;
 
     @Override
-    public String complete(String systemPrompt, String userPrompt) {
+    public LlmCompletion complete(String systemPrompt, String userPrompt) {
         log.info("Mock LLM called; returning fixed response");
-        return MOCK_RESPONSE;
+        // Mock 响应视为降级，提示用户未接入真实模型
+        return LlmCompletion.degraded(MOCK_RESPONSE);
     }
 }

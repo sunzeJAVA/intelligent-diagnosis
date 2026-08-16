@@ -39,6 +39,9 @@ intelligent-diagnosis/
 
 ```bash
 # 一键启动全部服务（基础设施、后端、Parse Workers、前端）
+# 先复制并填写环境变量（JWT_SECRET / REPOSITORY_ENCRYPTION_KEY / LLM_API_KEY）
+cp infrastructure/docker/.env.example infrastructure/docker/.env
+# 编辑 .env 填入真实密钥后执行：
 docker-compose -f infrastructure/docker/docker-compose.yml up -d --build
 ```
 
@@ -52,10 +55,15 @@ docker-compose -f infrastructure/docker/docker-compose.yml up -d postgres qdrant
 ./mvnw clean install
 
 # 3. 启动 control-plane（依赖 PostgreSQL/Temporal）
-./mvnw -pl control-plane/control-boot -am spring-boot:run
+# 注意：control-plane 默认激活 local profile 以加载 application-local.yml
+SPRING_PROFILES_ACTIVE=local \
+  ./mvnw -pl control-plane/control-boot spring-boot:run -Dspring.profiles.active=local
 
 # 4. 启动 data-plane（依赖 Qdrant/Neo4j，会自动连接配置的 Parse Workers）
-./mvnw -pl data-plane/data-boot -am spring-boot:run
+# 注意：data-plane 启动需要 REPOSITORY_ENCRYPTION_KEY 环境变量（32 字节），并激活 local profile
+REPOSITORY_ENCRYPTION_KEY=dev-encryption-key-32bytes \
+  SPRING_PROFILES_ACTIVE=local \
+  ./mvnw -pl data-plane/data-boot spring-boot:run -Dspring.profiles.active=local
 
 # 5. 启动 Parse Workers
 ./mvnw -pl parse-workers/java-parser spring-boot:run

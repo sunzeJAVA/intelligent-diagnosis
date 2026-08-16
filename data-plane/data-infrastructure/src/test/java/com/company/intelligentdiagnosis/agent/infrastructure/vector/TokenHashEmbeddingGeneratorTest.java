@@ -3,6 +3,7 @@ package com.company.intelligentdiagnosis.agent.infrastructure.vector;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.offset;
@@ -54,5 +55,20 @@ class TokenHashEmbeddingGeneratorTest {
     @Test
     void shouldDefaultTo384Dimension() {
         assertThat(generator.dimension()).isEqualTo(384);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "a", "abc", "main", "NullPointerException", "Integer.MIN_VALUE",
+        "veryLongIdentifierNameThatMightHashToMinValue", "x", "_"
+    })
+    void shouldAlwaysProduceValidBucketIndex(String token) {
+        // 不应抛 ArrayIndexOutOfBoundsException；结果向量维度正确
+        float[] vector = generator.embed(token);
+
+        assertThat(vector).hasSize(generator.dimension());
+        for (float v : vector) {
+            assertThat(Float.isNaN(v)).isFalse();
+        }
     }
 }

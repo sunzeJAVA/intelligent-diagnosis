@@ -1056,12 +1056,100 @@
       "aiTool": "AI Assistant",
       "detectionMethod": "REALTIME_SPEED_ANALYSIS",
       "lineCount": 337
+    },
+    {
+      "filePath": "/fragment.java",
+      "timestamp": 1785855869195,
+      "startOffset": 0,
+      "endOffset": 69,
+      "codeContent": "com.company.intelligentdiagnosis.control.boot.ControlPlaneApplication",
+      "aiProbability": 90,
+      "aiTool": "AI Assistant",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 1
+    },
+    {
+      "filePath": "/fragment.java",
+      "timestamp": 1785855876059,
+      "startOffset": 0,
+      "endOffset": 64,
+      "codeContent": "com.company.intelligentdiagnosis.agent.boot.DataPlaneApplication",
+      "aiProbability": 90,
+      "aiTool": "AI Assistant",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 1
+    },
+    {
+      "filePath": "/Users/sunze/git/intelligent-diagnosis/parse-workers/java-parser/src/main/java/com/company/intelligentdiagnosis/parse/java/JavaParseWorkerService.java",
+      "timestamp": 1785857188439,
+      "startOffset": 263,
+      "endOffset": 3059,
+      "codeContent": "io.IOException;\nimport java.nio.file.Files;\nimport java.nio.file.Path;\nimport java.nio.file.Paths;\nimport java.util.ArrayList;\nimport java.util.List;\nimport java.util.stream.Stream;\n\n@GrpcService\npublic class JavaParseWorkerService extends ParseWorkerGrpc.ParseWorkerImplBase {\n\n    private static final Logger log \u003d LoggerFactory.getLogger(JavaParseWorkerService.class);\n\n    private final JavaParserAnalyzer analyzer;\n\n    public JavaParseWorkerService(JavaParserAnalyzer analyzer) {\n        this.analyzer \u003d analyzer;\n    }\n\n    @Override\n    public void parse(ParseRequest request, StreamObserver\u003cParseResponse\u003e responseObserver) {\n        long start \u003d System.currentTimeMillis();\n        log.info(\"Parsing Java files for repository: {}, commit: {}\", request.getRepository(), request.getCommitHash());\n\n        try {\n            Path repoPath \u003d Paths.get(request.getRepoPath());\n            List\u003cString\u003e files \u003d request.getChangedFilesList();\n\n            // changedFiles 为空时，扫描仓库中所有 .java 文件（全量解析）\n            if (files.isEmpty()) {\n                log.info(\"No changed files specified, scanning all .java files in {}\", repoPath);\n                files \u003d scanAllJavaFiles(repoPath);\n                log.info(\"Found {} Java files for full parse\", files.size());\n            }\n\n            List\u003cCodeElement\u003e elements \u003d analyzer.analyze(repoPath, files);\n\n            ParseResponse response \u003d ParseResponse.newBuilder()\n                .addAllElements(elements)\n                .setDurationMs(System.currentTimeMillis() - start)\n                .build();\n\n            responseObserver.onNext(response);\n            responseObserver.onCompleted();\n\n        } catch (Exception e) {\n            log.error(\"Failed to parse Java files\", e);\n            ParseError error \u003d ParseError.newBuilder()\n                .setMessage(e.getMessage())\n                .setSeverity(ErrorSeverity.FATAL)\n                .build();\n\n            responseObserver.onNext(ParseResponse.newBuilder()\n                .addErrors(error)\n                .setDurationMs(System.currentTimeMillis() - start)\n                .build());\n            responseObserver.onCompleted();\n        }\n    }\n\n    /**\n     * 扫描仓库中所有 .java 文件的相对路径\n     *\n     * @param repoPath 仓库根路径\n     * @return 相对于 repoPath 的 .java 文件路径列表\n     */\n    private List\u003cString\u003e scanAllJavaFiles(Path repoPath) {\n        List\u003cString\u003e files \u003d new ArrayList\u003c\u003e();\n        try (Stream\u003cPath\u003e stream \u003d Files.walk(repoPath)) {\n            stream.filter(Files::isRegularFile)\n                .filter(p -\u003e p.toString().endsWith(\".java\"))\n                .forEach(p -\u003e files.add(repoPath.relativize(p).toString().replace(\u0027\\\\\u0027, \u0027/\u0027)));\n        } catch (IOException e) {\n            log.error(\"Failed to scan Java files in {}\", repoPath, e);\n        }\n        return files;",
+      "aiProbability": 95,
+      "aiTool": "AI Assistant",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 76
+    },
+    {
+      "filePath": "/Users/sunze/git/intelligent-diagnosis/data-plane/data-application/src/main/java/com/company/intelligentdiagnosis/agent/application/DiagnosisApplicationService.java",
+      "timestamp": 1786457752079,
+      "startOffset": 750,
+      "endOffset": 2358,
+      "codeContent": "diagnosis.QueryRewriter;\nimport com.company.intelligentdiagnosis.agent.domain.diagnosis.RewrittenQuery;\nimport com.company.intelligentdiagnosis.agent.domain.llm.LlmClient;\nimport com.fasterxml.jackson.core.JsonProcessingException;\nimport com.fasterxml.jackson.databind.ObjectMapper;\nimport io.micrometer.core.instrument.Counter;\nimport io.micrometer.observation.annotation.Observed;\nimport org.slf4j.Logger;\nimport org.slf4j.LoggerFactory;\nimport org.springframework.stereotype.Service;\n\nimport java.util.List;\n\n/**\n * 诊断应用服务\n * 协调诊断流程：策略验证 → 代码检索 → LLM分析 → 结果解析 → 审计记录\n */\n@Service\npublic class DiagnosisApplicationService {\n\n    private static final Logger log \u003d LoggerFactory.getLogger(DiagnosisApplicationService.class);\n\n    private static final String SYSTEM_PROMPT \u003d \"\"\"\n        You are an expert software engineering assistant. Given a user query, error information, service name, and relevant code snippets, analyze the problem and produce a structured diagnosis in Chinese.\n        Return ONLY a JSON object with this shape:\n        {\n          \"summary\": \"one-sentence summary of the issue\",\n          \"rootCause\": \"detailed root cause analysis\",\n          \"suggestions\": [\"actionable fix 1\", \"actionable fix 2\", ...]\n        }\n        Do not include markdown fences, explanations, or any text outside the JSON.\n        \"\"\";\n\n    private final CodeRetriever codeRetriever;\n    private final LlmClient llmClient;\n    private final DiagnosisAuditor auditor;\n    private final PolicyEngine policyEngine;\n    private final IntentRecognizer intentRecognizer;\n    private final QueryRewriter queryRewrit",
+      "aiProbability": 95,
+      "aiTool": "AI Assistant",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 39
+    },
+    {
+      "filePath": "/Users/sunze/git/intelligent-diagnosis/data-plane/data-infrastructure/src/main/java/com/company/intelligentdiagnosis/agent/infrastructure/llm/MockDiagnosisLlmClient.java",
+      "timestamp": 1786809495383,
+      "startOffset": 143,
+      "endOffset": 215,
+      "codeContent": "com.company.intelligentdiagnosis.agent.domain.llm.LlmCompletion;\nimport ",
+      "aiProbability": 90,
+      "aiTool": "AI Assistant",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 2
+    },
+    {
+      "filePath": "/Users/sunze/git/intelligent-diagnosis/data-plane/data-infrastructure/src/main/java/com/company/intelligentdiagnosis/agent/infrastructure/llm/OpenAiLlmClient.java",
+      "timestamp": 1786809525430,
+      "startOffset": 143,
+      "endOffset": 215,
+      "codeContent": "com.company.intelligentdiagnosis.agent.domain.llm.LlmCompletion;\nimport ",
+      "aiProbability": 90,
+      "aiTool": "AI Assistant",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 2
+    },
+    {
+      "filePath": "/Users/sunze/git/intelligent-diagnosis/data-plane/data-application/src/main/java/com/company/intelligentdiagnosis/agent/application/DiagnosisApplicationService.java",
+      "timestamp": 1786809600505,
+      "startOffset": 4790,
+      "endOffset": 5317,
+      "codeContent": "var llmResult \u003d llmClient.complete(SYSTEM_PROMPT, userPrompt);\n        DiagnosisResponse response \u003d parseResponse(llmResult.content(), relatedCode, intent, llmResult.degraded());\n\n        long duration \u003d System.currentTimeMillis() - start;\n        auditor.record(request, response, duration);\n        if (!response.degraded()) {\n            diagnosisCounter.increment();\n        } else {\n            log.warn(\"Diagnosis returned degraded response for service {}, not incrementing success counter\", request.service());\n        }",
+      "aiProbability": 95,
+      "aiTool": "AI Assistant",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 10
+    },
+    {
+      "filePath": "/Users/sunze/git/intelligent-diagnosis/frontend/src/api/client.ts",
+      "timestamp": 1786810832098,
+      "startOffset": 946,
+      "endOffset": 1626,
+      "codeContent": "/**\n * 统一处理未认证/登录过期\n * 401 \u003d Unauthorized，清除本地 token 并跳转登录页\n */\nfunction handleUnauthorized(error: AxiosError): void {\n  const status \u003d error.response?.status\n  if (status \u003d\u003d\u003d 401) {\n    localStorage.removeItem(TOKEN_KEY)\n    // 使用整页跳转而非 router.push，避免与路由模块产生循环依赖，\n    // 同时刷新导航守卫状态\n    window.location.href \u003d \u0027/login\u0027\n  }\n}\n\nfunction addResponseInterceptor(instance: typeof controlApi) {\n  instance.interceptors.response.use(\n    (response) \u003d\u003e response,\n    (error) \u003d\u003e {\n      if (axios.isAxiosError(error)) {\n        handleServiceBusy(error)\n        handleUnauthorized(error)\n      }\n      return Promise.reject(error)\n    }\n  )\n}\n\naddResponseInterceptor(controlApi)\naddResponse",
+      "aiProbability": 95,
+      "aiTool": "AI Assistant",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 29
     }
   ],
   "toolStats": {
     "AI Assistant": {
-      "usageCount": 96,
-      "totalLines": 4138
+      "usageCount": 104,
+      "totalLines": 4298
     }
   }
 }

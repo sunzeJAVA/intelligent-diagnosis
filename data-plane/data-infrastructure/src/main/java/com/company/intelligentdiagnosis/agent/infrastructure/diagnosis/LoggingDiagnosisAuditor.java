@@ -18,7 +18,7 @@ public class LoggingDiagnosisAuditor implements DiagnosisAuditor {
 
     @Override
     public void record(DiagnosisRequest request, DiagnosisResponse response, long durationMillis) {
-        log.info("Diagnosis completed for service {} in {}ms: summary={}",
-            request.service(), durationMillis, response.summary());
+        log.info("Diagnosis completed for service {} in {}ms: degraded={}, summary={}",
+            request.service(), durationMillis, response.degraded(), response.summary());
     }
 }

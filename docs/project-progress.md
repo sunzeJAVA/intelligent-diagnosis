@@ -193,6 +193,53 @@ IndexUpdateWorkflow
 
 ---
 
+## 架构设计债评估（2026-08-16）
+
+### 1. 多租户检索隔离
+
+**现状**：`DiagnosisRequest` 已携带 `tenantId` / `userId`，但 `QdrantCodeRetriever`、`GraphCodeRetriever` 仅按 `service` 过滤。多租户部署时，A 租户代码可能被召回给 B 租户诊断。
+
+**方案对比**：
+
+| 方案 | 改动点 | 优点 | 缺点 |
+|------|--------|------|------|
+| A. 单 Collection + payload 过滤 | Qdrant/Neo4j 节点增加 `tenantId` 字段，检索时追加 filter | 资源开销小，维护简单 | 依赖 payload 索引，大数据量下过滤性能一般 |
+| B. 每租户独立 Collection / Graph | 按 `tenantId` 动态选 collection / 图数据库 | 物理隔离最强，性能最好 | 运维复杂，需动态创建/销毁资源 |
+| C. 服务级隔离（当前） | 仅按 `service` 过滤 | 实现最简单 | 不支持多租户共享服务名 |
+
+**建议**：先做 **方案 A**（在 `CodeElement` payload 和 Neo4j 节点属性中加入 `tenantId`，检索时强制过滤）。改动量可控，且能满足 SaaS 多租户基本需求。
+
+### 2. 控制平面与数据平面共用 PostgreSQL
+
+**现状**：两端连接同一个 `control_plane` 库；Flyway 迁移编号分别从 V1/V3 起跳，仅靠不同 `flyway_schema_history_*` 表名隔离。
+
+**风险**：
+- 新增迁移容易撞号，导致升级失败。
+- 数据平面本应以 Qdrant/Neo4j 为主存储，现在写关系库破坏边界。
+- 单库故障同时影响两个平面。
+
+**建议**：
+- 短期：数据平面新增独立库（如 `data_plane`），迁移文件迁到 `data-plane/db/migration`，编号从 V1 重新开始。
+- 长期：数据平面的仓库/快照元数据可保留 PG，但与控制平面的用户/审计/策略库物理分离。
+
+### 3. 一次诊断 = 3 次 LLM 调用
+
+**现状**：
+1. `LlmIntentRecognizer`：意图分类 + 实体提取 + `enhancedQuery`
+2. `LlmQueryRewriter`：生成 `searchQuery` + `llmPromptQuery`
+3. `DiagnosisApplicationService`：主诊断生成 JSON
+
+**问题**：
+- 步骤 1 和 2 都是“语义增强”，功能重叠，成本翻倍。
+- 任一 LLM 调用失败都会触发熔断/降级，链路越长失败概率越高。
+
+**建议**：
+- 合并意图识别与 Query 重写：一次 LLM 调用同时输出 `intent`、`entities`、`searchQuery`、`llmPromptQuery`。
+- 保留主诊断调用，形成“1 次增强 + 1 次诊断”的两阶段模型。
+- 在主诊断 prompt 中显式注入意图和增强 query，减少第二步对 LLM 的依赖。
+
+---
+
 ## 服务启动命令
 
 ### 方式一：本地 Profile 配置文件（推荐，密钥不进环境变量）

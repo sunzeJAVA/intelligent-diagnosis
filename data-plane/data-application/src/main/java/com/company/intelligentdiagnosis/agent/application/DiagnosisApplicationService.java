@@ -8,6 +8,8 @@ import com.company.intelligentdiagnosis.agent.domain.diagnosis.DiagnosisRequest;
 import com.company.intelligentdiagnosis.agent.domain.diagnosis.DiagnosisResponse;
 import com.company.intelligentdiagnosis.agent.domain.diagnosis.IntentRecognizer;
 import com.company.intelligentdiagnosis.agent.domain.diagnosis.PolicyEngine;
+import com.company.intelligentdiagnosis.agent.domain.diagnosis.QueryRewriter;
+import com.company.intelligentdiagnosis.agent.domain.diagnosis.RewrittenQuery;
 import com.company.intelligentdiagnosis.agent.domain.llm.LlmClient;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -44,6 +46,7 @@ public class DiagnosisApplicationService {
     private final DiagnosisAuditor auditor;
     private final PolicyEngine policyEngine;
     private final IntentRecognizer intentRecognizer;
+    private final QueryRewriter queryRewriter;
     private final ObjectMapper objectMapper;
     private final Counter diagnosisCounter;
 
@@ -55,6 +58,7 @@ public class DiagnosisApplicationService {
      * @param auditor          诊断审计器
      * @param policyEngine     策略引擎
      * @param intentRecognizer 意图识别器
+     * @param queryRewriter    Query 重写器
      * @param objectMapper     JSON 序列化器
      */
     public DiagnosisApplicationService(CodeRetriever codeRetriever,
@@ -62,6 +66,7 @@ public class DiagnosisApplicationService {
                                        DiagnosisAuditor auditor,
                                        PolicyEngine policyEngine,
                                        IntentRecognizer intentRecognizer,
+                                       QueryRewriter queryRewriter,
                                        ObjectMapper objectMapper,
                                        Counter diagnosisCounter) {
         this.codeRetriever = codeRetriever;
@@ -69,6 +74,7 @@ public class DiagnosisApplicationService {
         this.auditor = auditor;
         this.policyEngine = policyEngine;
         this.intentRecognizer = intentRecognizer;
+        this.queryRewriter = queryRewriter;
         this.objectMapper = objectMapper;
         this.diagnosisCounter = diagnosisCounter;
     }
@@ -90,44 +96,50 @@ public class DiagnosisApplicationService {
         DiagnosisIntent intent = intentRecognizer.recognize(request);
         log.info("Intent recognized for service {}: type={}, confidence={}", request.service(), intent.type(), intent.confidence());
 
-        // 用意图增强后的 query 进行代码检索，提升召回质量
-        DiagnosisRequest enhancedRequest = withEnhancedQuery(request, intent);
-        List<CodeSnippet> relatedCode = codeRetriever.retrieve(enhancedRequest);
+        // Query 重写：生成面向检索的 searchQuery 和面向 LLM prompt 的 llmPromptQuery
+        RewrittenQuery rewrittenQuery = queryRewriter.rewrite(request.query(), intent);
+        DiagnosisRequest searchRequest = withSearchQuery(request, rewrittenQuery);
+        List<CodeSnippet> relatedCode = codeRetriever.retrieve(searchRequest, intent);
 
         // 构建包含意图上下文的 LLM prompt
-        String userPrompt = buildUserPrompt(request, intent, relatedCode);
-        String rawResponse = llmClient.complete(SYSTEM_PROMPT, userPrompt);
-        DiagnosisResponse response = parseResponse(rawResponse, relatedCode, intent);
+        String userPrompt = buildUserPrompt(request, intent, rewrittenQuery, relatedCode);
+        var llmResult = llmClient.complete(SYSTEM_PROMPT, userPrompt);
+        DiagnosisResponse response = parseResponse(llmResult.content(), relatedCode, intent, llmResult.degraded());
 
         long duration = System.currentTimeMillis() - start;
         auditor.record(request, response, duration);
-        diagnosisCounter.increment();
+        if (!response.degraded()) {
+            diagnosisCounter.increment();
+        } else {
+            log.warn("Diagnosis returned degraded response for service {}, not incrementing success counter", request.service());
+        }
 
         return response;
     }
 
     /**
-     * 用意图识别的 enhancedQuery 替换请求中的 query 字段，用于增强检索
+     * 用重写后的 searchQuery 替换请求中的 query 字段，用于增强向量检索
      * 保留原始 errorInfo 和 service
      */
-    private DiagnosisRequest withEnhancedQuery(DiagnosisRequest original, DiagnosisIntent intent) {
-        String enhancedQuery = intent.enhancedQuery();
-        if (enhancedQuery == null || enhancedQuery.isBlank() || enhancedQuery.equals(original.query())) {
+    private DiagnosisRequest withSearchQuery(DiagnosisRequest original, RewrittenQuery rewrittenQuery) {
+        String searchQuery = rewrittenQuery.searchQuery();
+        if (searchQuery == null || searchQuery.isBlank() || searchQuery.equals(original.query())) {
             return original;
         }
-        return new DiagnosisRequest(enhancedQuery, original.errorInfo(), original.service(), original.userId(), original.tenantId());
+        return new DiagnosisRequest(searchQuery, original.errorInfo(), original.service(), original.userId(), original.tenantId());
     }
 
     /**
      * 构建用户提示词
-     * 将诊断请求、意图识别结果和相关代码片段组合成完整的提示词
+     * 将诊断请求、意图识别结果、重写后的 query 和相关代码片段组合成完整的提示词
      *
-     * @param request  原始诊断请求
-     * @param intent   意图识别结果
-     * @param snippets 相关代码片段列表
+     * @param request        原始诊断请求
+     * @param intent         意图识别结果
+     * @param rewrittenQuery Query 重写结果
+     * @param snippets       相关代码片段列表
      * @return 完整的用户提示词
      */
-    private String buildUserPrompt(DiagnosisRequest request, DiagnosisIntent intent, List<CodeSnippet> snippets) {
+    private String buildUserPrompt(DiagnosisRequest request, DiagnosisIntent intent, RewrittenQuery rewrittenQuery, List<CodeSnippet> snippets) {
         StringBuilder builder = new StringBuilder();
         builder.append("Service: ").append(request.service()).append("\n");
         // 注入意图识别上下文，帮助 LLM 聚焦问题类型
@@ -136,7 +148,10 @@ public class DiagnosisApplicationService {
         if (!intent.entities().isEmpty()) {
             builder.append("Key Entities: ").append(String.join(", ", intent.entities())).append("\n");
         }
-        if (request.query() != null && !request.query().isBlank()) {
+        String promptQuery = rewrittenQuery.llmPromptQuery();
+        if (promptQuery != null && !promptQuery.isBlank()) {
+            builder.append("Query: ").append(promptQuery).append("\n");
+        } else if (request.query() != null && !request.query().isBlank()) {
             builder.append("Query: ").append(request.query()).append("\n");
         }
         if (request.errorInfo() != null && !request.errorInfo().isBlank()) {
@@ -164,7 +179,10 @@ public class DiagnosisApplicationService {
      * @param intent      意图识别结果
      * @return 解析后的诊断响应
      */
-    private DiagnosisResponse parseResponse(String rawResponse, List<CodeSnippet> relatedCode, DiagnosisIntent intent) {
+    private DiagnosisResponse parseResponse(String rawResponse,
+                                            List<CodeSnippet> relatedCode,
+                                            DiagnosisIntent intent,
+                                            boolean llmDegraded) {
         String cleaned = stripMarkdownFences(rawResponse);
         try {
             ParsedLlmResponse parsed = objectMapper.readValue(cleaned, ParsedLlmResponse.class);
@@ -173,7 +191,8 @@ public class DiagnosisApplicationService {
                 parsed.rootCause,
                 parsed.suggestions,
                 relatedCode,
-                intent
+                intent,
+                llmDegraded
             );
         } catch (JsonProcessingException e) {
             log.warn("Failed to parse LLM response as JSON, using fallback. Response: {}", rawResponse, e);
@@ -182,7 +201,8 @@ public class DiagnosisApplicationService {
                 "",
                 List.of(),
                 relatedCode,
-                intent
+                intent,
+                true
             );
         }
     }

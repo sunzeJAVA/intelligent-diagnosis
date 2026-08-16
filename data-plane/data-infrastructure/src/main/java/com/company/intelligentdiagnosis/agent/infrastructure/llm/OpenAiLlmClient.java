@@ -1,6 +1,7 @@
 package com.company.intelligentdiagnosis.agent.infrastructure.llm;
 
 import com.company.intelligentdiagnosis.agent.domain.llm.LlmClient;
+import com.company.intelligentdiagnosis.agent.domain.llm.LlmCompletion;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +44,7 @@ public class OpenAiLlmClient implements LlmClient {
 
     @Override
     @CircuitBreaker(name = "llm", fallbackMethod = "fallbackComplete")
-    public String complete(String systemPrompt, String userPrompt) {
+    public LlmCompletion complete(String systemPrompt, String userPrompt) {
         ChatCompletionRequest request = new ChatCompletionRequest(
             properties.getModel(),
             List.of(
@@ -66,11 +67,11 @@ public class OpenAiLlmClient implements LlmClient {
             throw new LlmClientException("Empty LLM response");
         }
 
-        return response.choices().get(0).message().content();
+        return LlmCompletion.normal(response.choices().get(0).message().content());
     }
 
-    private String fallbackComplete(String systemPrompt, String userPrompt, Throwable throwable) {
+    private LlmCompletion fallbackComplete(String systemPrompt, String userPrompt, Throwable throwable) {
         log.warn("LLM circuit breaker opened or call failed, returning fallback response: {}", throwable.getMessage());
-        return FALLBACK_RESPONSE;
+        return LlmCompletion.degraded(FALLBACK_RESPONSE);
     }
 }

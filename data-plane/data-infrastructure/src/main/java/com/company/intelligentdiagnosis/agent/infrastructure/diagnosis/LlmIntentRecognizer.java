@@ -61,7 +61,7 @@ public class LlmIntentRecognizer implements IntentRecognizer {
         String systemPrompt = buildSystemPrompt();
         String userPrompt = buildUserPrompt(userInput);
 
-        String raw = llmClient.complete(systemPrompt, userPrompt);
+        String raw = llmClient.complete(systemPrompt, userPrompt).content();
         return parseResponse(raw, userInput);
     }
 

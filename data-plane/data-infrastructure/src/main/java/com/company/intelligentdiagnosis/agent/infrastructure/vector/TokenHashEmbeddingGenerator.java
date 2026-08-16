@@ -81,9 +81,10 @@ public class TokenHashEmbeddingGenerator implements EmbeddingGenerator {
                 | ((hash[1] & 0xFF) << 16)
                 | ((hash[2] & 0xFF) << 8)
                 | (hash[3] & 0xFF);
-            return Math.abs(value) % dimension;
+            // 使用无符号右移避免 Math.abs(Integer.MIN_VALUE) 仍为负数的经典 bug
+            return (value & 0x7FFFFFFF) % dimension;
         } catch (NoSuchAlgorithmException e) {
-            return Math.abs(token.hashCode()) % dimension;
+            return (token.hashCode() & 0x7FFFFFFF) % dimension;
         }
     }
 

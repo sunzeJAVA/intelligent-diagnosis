@@ -148,13 +148,14 @@ public class RepositoryApplicationService {
 
     /**
      * 同步仓库
+     * 注意：不使用 @Transactional，因为 git 操作耗时长，不应在数据库事务中执行。
+     * 事务由 GitSyncService 内部通过 REQUIRES_NEW 独立管理。
      *
      * @param id          仓库 ID
      * @param triggeredBy 触发者
      * @return 同步状态记录
      * @throws RepositorySyncException 仓库不存在时抛出
      */
-    @Transactional
     public RepositorySyncStateEntity syncRepository(String id, String triggeredBy) {
         RepositoryConfigEntity config = configRepository.findById(id)
             .orElseThrow(() -> new RepositorySyncException("Repository not found: " + id));

@@ -17,16 +17,28 @@ public record DiagnosisResponse(
     String rootCause,
     List<String> suggestions,
     List<CodeSnippet> relatedCode,
-    DiagnosisIntent intent
+    DiagnosisIntent intent,
+    boolean degraded
 ) {
 
     /**
-     * 向后兼容的工厂方法：不携带意图识别结果
+     * 向后兼容的工厂方法：不携带意图识别结果，非降级
      */
     public static DiagnosisResponse of(String summary,
                                        String rootCause,
                                        List<String> suggestions,
                                        List<CodeSnippet> relatedCode) {
-        return new DiagnosisResponse(summary, rootCause, suggestions, relatedCode, null);
+        return new DiagnosisResponse(summary, rootCause, suggestions, relatedCode, null, false);
+    }
+
+    /**
+     * 向后兼容的工厂方法：携带意图识别结果，非降级
+     */
+    public static DiagnosisResponse of(String summary,
+                                       String rootCause,
+                                       List<String> suggestions,
+                                       List<CodeSnippet> relatedCode,
+                                       DiagnosisIntent intent) {
+        return new DiagnosisResponse(summary, rootCause, suggestions, relatedCode, intent, false);
     }
 }

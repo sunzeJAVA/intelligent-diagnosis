@@ -1,6 +1,7 @@
 package com.company.intelligentdiagnosis.agent.infrastructure.llm;
 
 import com.company.intelligentdiagnosis.agent.domain.llm.LlmClient;
+import com.company.intelligentdiagnosis.agent.domain.llm.LlmCompletion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,7 +25,7 @@ public class CompositeLlmClient implements LlmClient {
     }
 
     @Override
-    public String complete(String systemPrompt, String userPrompt) {
+    public LlmCompletion complete(String systemPrompt, String userPrompt) {
         LlmClientException lastException = null;
         for (LlmClient delegate : delegates) {
             try {

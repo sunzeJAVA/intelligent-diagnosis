@@ -84,13 +84,11 @@ public class JwtTokenProvider {
      * 校验 Token 是否有效
      */
     public boolean validateToken(String token) {
-        try {
-            parseClaims(token);
-            return true;
-        } catch (JwtException | IllegalArgumentException e) {
-            log.warn("Invalid JWT token: {}", e.getMessage());
-            return false;
+        boolean valid = parseClaims(token).isPresent();
+        if (!valid) {
+            log.warn("Invalid JWT token");
         }
+        return valid;
     }
 
     private Optional<Claims> parseClaims(String token) {

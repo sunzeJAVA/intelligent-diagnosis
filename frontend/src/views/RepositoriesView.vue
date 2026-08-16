@@ -241,6 +241,7 @@ import {
   Plus, GitBranch, RefreshCw,
   Loader2, Trash2, Link, GitCommit, Folder
 } from 'lucide-vue-next'
+import { showToast } from '@/utils/toast'
 
 const repositories = ref<RepositoryConfig[]>([])
 const loading = ref(false)
@@ -300,6 +301,18 @@ async function syncRepo(id: string) {
   try {
     await syncRepository(id)
     syncHistory.value[id] = await getSyncHistory(id)
+    showToast('同步成功', 'success')
+  } catch (error: any) {
+    const message = error?.code === 'ECONNABORTED'
+      ? '同步超时，请检查仓库大小或网络后重试'
+      : `同步失败：${error?.response?.data?.message || error?.message || '未知错误'}`
+    showToast(message, 'error')
+    // 即使同步请求失败，也尝试获取最新的同步历史（可能后端已记录 FAILED 状态）
+    try {
+      syncHistory.value[id] = await getSyncHistory(id)
+    } catch {
+      // 忽略获取历史失败
+    }
   } finally {
     syncingIds.value.delete(id)
   }

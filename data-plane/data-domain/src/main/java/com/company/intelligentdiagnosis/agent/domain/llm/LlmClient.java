@@ -11,8 +11,8 @@ public interface LlmClient {
      *
      * @param systemPrompt 系统提示词，用于指导模型行为
      * @param userPrompt   用户输入的提示词
-     * @return 模型生成的响应文本
+     * @return 模型生成的响应结果，包含原始文本及是否为降级响应的标记
      * @throws com.company.intelligentdiagnosis.agent.infrastructure.llm.LlmClientException 当调用失败时抛出
      */
-    String complete(String systemPrompt, String userPrompt);
+    LlmCompletion complete(String systemPrompt, String userPrompt);
 }

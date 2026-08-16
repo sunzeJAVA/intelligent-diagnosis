@@ -37,19 +37,34 @@ function handleServiceBusy(error: AxiosError): void {
   }
 }
 
-function addBusyInterceptor(instance: typeof controlApi) {
+/**
+ * 统一处理未认证/登录过期
+ * 401 = Unauthorized，清除本地 token 并跳转登录页
+ */
+function handleUnauthorized(error: AxiosError): void {
+  const status = error.response?.status
+  if (status === 401) {
+    localStorage.removeItem(TOKEN_KEY)
+    // 使用整页跳转而非 router.push，避免与路由模块产生循环依赖，
+    // 同时刷新导航守卫状态
+    window.location.href = '/login'
+  }
+}
+
+function addResponseInterceptor(instance: typeof controlApi) {
   instance.interceptors.response.use(
     (response) => response,
     (error) => {
       if (axios.isAxiosError(error)) {
         handleServiceBusy(error)
+        handleUnauthorized(error)
       }
       return Promise.reject(error)
     }
   )
 }
 
-addBusyInterceptor(controlApi)
-addBusyInterceptor(dataApi)
+addResponseInterceptor(controlApi)
+addResponseInterceptor(dataApi)
 
 export { controlApi, dataApi, TOKEN_KEY }

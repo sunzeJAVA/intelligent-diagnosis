@@ -1,6 +1,7 @@
 package com.company.intelligentdiagnosis.agent.infrastructure.llm;
 
 import com.company.intelligentdiagnosis.agent.domain.llm.LlmClient;
+import com.company.intelligentdiagnosis.agent.domain.llm.LlmCompletion;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -16,11 +17,11 @@ class CompositeLlmClientTest {
     void shouldReturnFirstSuccessfulResponse() {
         LlmClient first = mock(LlmClient.class);
         LlmClient second = mock(LlmClient.class);
-        when(first.complete("system", "user")).thenReturn("first");
-        when(second.complete("system", "user")).thenReturn("second");
+        when(first.complete("system", "user")).thenReturn(LlmCompletion.normal("first"));
+        when(second.complete("system", "user")).thenReturn(LlmCompletion.normal("second"));
 
         CompositeLlmClient client = new CompositeLlmClient(List.of(first, second));
-        assertThat(client.complete("system", "user")).isEqualTo("first");
+        assertThat(client.complete("system", "user")).isEqualTo(LlmCompletion.normal("first"));
     }
 
     @Test
@@ -28,10 +29,10 @@ class CompositeLlmClientTest {
         LlmClient first = mock(LlmClient.class);
         LlmClient second = mock(LlmClient.class);
         when(first.complete("system", "user")).thenThrow(new LlmClientException("first failed"));
-        when(second.complete("system", "user")).thenReturn("second");
+        when(second.complete("system", "user")).thenReturn(LlmCompletion.normal("second"));
 
         CompositeLlmClient client = new CompositeLlmClient(List.of(first, second));
-        assertThat(client.complete("system", "user")).isEqualTo("second");
+        assertThat(client.complete("system", "user")).isEqualTo(LlmCompletion.normal("second"));
     }
 
     @Test

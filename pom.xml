@@ -26,6 +26,7 @@
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <mockito.version>5.14.2</mockito.version>
+        <spring-boot.version>3.4.0</spring-boot.version>
         <!-- 统一 gRPC 版本，解决 temporal-sdk 与 qdrant-client 的版本冲突 -->
         <grpc.version>1.59.0</grpc.version>
         <!-- 建议统一 temporal-sdk 版本 -->
@@ -73,6 +74,12 @@
                     <configuration>
                         <argLine>-Djdk.attach.allowAttachSelf=true</argLine>
                     </configuration>
+                </plugin>
+                <!-- 在根 pom 管理 spring-boot 插件版本，使 spring-boot:run 前缀能从项目根目录解析 -->
+                <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+                    <version>${spring-boot.version}</version>
                 </plugin>
             </plugins>
         </pluginManagement>

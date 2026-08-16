@@ -9,13 +9,17 @@ import com.company.intelligentdiagnosis.agent.domain.diagnosis.DiagnosisResponse
 import com.company.intelligentdiagnosis.agent.domain.diagnosis.IntentRecognizer;
 import com.company.intelligentdiagnosis.agent.domain.diagnosis.IntentType;
 import com.company.intelligentdiagnosis.agent.domain.diagnosis.PolicyEngine;
+import com.company.intelligentdiagnosis.agent.domain.diagnosis.QueryRewriter;
+import com.company.intelligentdiagnosis.agent.domain.diagnosis.RewrittenQuery;
 import com.company.intelligentdiagnosis.agent.domain.llm.LlmClient;
+import com.company.intelligentdiagnosis.agent.domain.llm.LlmCompletion;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.core.instrument.Counter;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
@@ -47,6 +51,9 @@ class DiagnosisApplicationServiceTest {
     private IntentRecognizer intentRecognizer;
 
     @Mock
+    private QueryRewriter queryRewriter;
+
+    @Mock
     private Counter diagnosisCounter;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -54,21 +61,23 @@ class DiagnosisApplicationServiceTest {
     @Test
     void shouldDiagnoseWithStructuredJsonResponse() {
         DiagnosisApplicationService service = new DiagnosisApplicationService(
-            codeRetriever, llmClient, auditor, policyEngine, intentRecognizer, objectMapper, diagnosisCounter
+            codeRetriever, llmClient, auditor, policyEngine, intentRecognizer, queryRewriter, objectMapper, diagnosisCounter
         );
 
         DiagnosisRequest request = new DiagnosisRequest("query", "error", "svc", "user", "tenant");
         // 意图识别返回 unknown 且 enhancedQuery 等于原 query，确保 retrieve 接收原始 request
-        when(intentRecognizer.recognize(request)).thenReturn(DiagnosisIntent.unknown("query"));
+        DiagnosisIntent intent = DiagnosisIntent.unknown("query");
+        when(intentRecognizer.recognize(request)).thenReturn(intent);
+        when(queryRewriter.rewrite(eq("query"), any(DiagnosisIntent.class))).thenReturn(RewrittenQuery.identity("query"));
         CodeSnippet snippet = new CodeSnippet("src/Main.java", 1, 5, "class Main {}");
-        when(codeRetriever.retrieve(request)).thenReturn(List.of(snippet));
-        when(llmClient.complete(anyString(), anyString())).thenReturn("""
+        when(codeRetriever.retrieve(eq(request), any(DiagnosisIntent.class))).thenReturn(List.of(snippet));
+        when(llmClient.complete(anyString(), anyString())).thenReturn(LlmCompletion.normal("""
             {
               "summary": "summary",
               "rootCause": "root cause",
               "suggestions": ["fix 1"]
             }
-            """);
+            """));
 
         DiagnosisResponse response = service.diagnose(request);
 
@@ -78,22 +87,26 @@ class DiagnosisApplicationServiceTest {
         assertThat(response.relatedCode()).containsExactly(snippet);
         assertThat(response.intent()).isNotNull();
         assertThat(response.intent().type()).isEqualTo(IntentType.UNKNOWN);
+        assertThat(response.degraded()).isFalse();
+        verify(diagnosisCounter).increment();
 
         ArgumentCaptor<DiagnosisResponse> responseCaptor = ArgumentCaptor.forClass(DiagnosisResponse.class);
         verify(auditor).record(eq(request), responseCaptor.capture(), anyLong());
         assertThat(responseCaptor.getValue().summary()).isEqualTo("summary");
+        assertThat(responseCaptor.getValue().degraded()).isFalse();
     }
 
     @Test
     void shouldStripMarkdownFencesFromJsonResponse() {
         DiagnosisApplicationService service = new DiagnosisApplicationService(
-            codeRetriever, llmClient, auditor, policyEngine, intentRecognizer, objectMapper, diagnosisCounter
+            codeRetriever, llmClient, auditor, policyEngine, intentRecognizer, queryRewriter, objectMapper, diagnosisCounter
         );
 
         DiagnosisRequest request = new DiagnosisRequest("query", "error", "svc", "user", "tenant");
         when(intentRecognizer.recognize(request)).thenReturn(DiagnosisIntent.unknown("query"));
-        when(codeRetriever.retrieve(request)).thenReturn(List.of());
-        when(llmClient.complete(anyString(), anyString())).thenReturn("""
+        when(queryRewriter.rewrite(eq("query"), any(DiagnosisIntent.class))).thenReturn(RewrittenQuery.identity("query"));
+        when(codeRetriever.retrieve(eq(request), any(DiagnosisIntent.class))).thenReturn(List.of());
+        when(llmClient.complete(anyString(), anyString())).thenReturn(LlmCompletion.normal("""
             ```json
             {
               "summary": "fenced summary",
@@ -101,7 +114,7 @@ class DiagnosisApplicationServiceTest {
               "suggestions": ["fenced fix"]
             }
             ```
-            """);
+            """));
 
         DiagnosisResponse response = service.diagnose(request);
 
@@ -113,18 +126,21 @@ class DiagnosisApplicationServiceTest {
     @Test
     void shouldFallbackWhenLlmReturnsInvalidJson() {
         DiagnosisApplicationService service = new DiagnosisApplicationService(
-            codeRetriever, llmClient, auditor, policyEngine, intentRecognizer, objectMapper, diagnosisCounter
+            codeRetriever, llmClient, auditor, policyEngine, intentRecognizer, queryRewriter, objectMapper, diagnosisCounter
         );
 
         DiagnosisRequest request = new DiagnosisRequest("query", "error", "svc", "user", "tenant");
         when(intentRecognizer.recognize(request)).thenReturn(DiagnosisIntent.unknown("query"));
-        when(codeRetriever.retrieve(request)).thenReturn(List.of());
-        when(llmClient.complete(anyString(), anyString())).thenReturn("plain text");
+        when(queryRewriter.rewrite(eq("query"), any(DiagnosisIntent.class))).thenReturn(RewrittenQuery.identity("query"));
+        when(codeRetriever.retrieve(eq(request), any(DiagnosisIntent.class))).thenReturn(List.of());
+        when(llmClient.complete(anyString(), anyString())).thenReturn(LlmCompletion.normal("plain text"));
 
         DiagnosisResponse response = service.diagnose(request);
 
         assertThat(response.summary()).isEqualTo("plain text");
         assertThat(response.rootCause()).isEmpty();
         assertThat(response.suggestions()).isEmpty();
+        assertThat(response.degraded()).isTrue();
+        verify(diagnosisCounter, Mockito.never()).increment();
     }
 }

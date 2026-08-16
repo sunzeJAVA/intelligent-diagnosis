@@ -44,7 +44,10 @@ export async function createRepository(config: RepositoryConfig): Promise<Reposi
 }
 
 export async function syncRepository(id: string): Promise<SyncState> {
-  const response = await dataApi.post<SyncState>(`/repositories/${id}/sync`)
+  // sync 可能涉及 git clone/pull 大仓库，需要更长超时（10分钟）
+  const response = await dataApi.post<SyncState>(`/repositories/${id}/sync`, undefined, {
+    timeout: 600000
+  })
   return response.data
 }
 
