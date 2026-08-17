@@ -75,6 +75,20 @@ cd frontend && pnpm install && pnpm dev
 
 访问 http://localhost:5173
 
+### E2E 测试
+
+```bash
+# 安装 Playwright 依赖（首次）
+cd e2e-tests
+npm install
+npx playwright install chromium
+
+# 启动前端 dev server 后执行（默认 http://localhost:5173）
+npm run test:e2e
+```
+
+当前覆盖：登录页渲染、未登录访问受保护路由自动跳转登录页。
+
 ## 核心 API
 
 ### 代码解析
