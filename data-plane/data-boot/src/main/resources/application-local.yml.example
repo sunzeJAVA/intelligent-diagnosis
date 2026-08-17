@@ -25,6 +25,12 @@ security:
   jwt:
     secret: your-strong-jwt-secret-key-at-least-32-bytes-long
 
+# 代码元素富化配置
+enrichment:
+  enabled: true
+  batch-size: 1
+  timeout-seconds: 60
+
 # LLM 配置：填入你的 API Key
 llm:
   provider: openai

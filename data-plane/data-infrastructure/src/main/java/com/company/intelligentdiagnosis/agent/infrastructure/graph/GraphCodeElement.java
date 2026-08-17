@@ -12,8 +12,10 @@ package com.company.intelligentdiagnosis.agent.infrastructure.graph;
  * @param filePath      文件路径
  * @param startLine     起始行号
  * @param endLine       结束行号
- * @param sourceCode    源代码内容
- * @param documentation 文档注释
+ * @param sourceCode      源代码内容
+ * @param documentation   文档注释
+ * @param chineseSummary  中文摘要
+ * @param englishSummary  英文摘要
  */
 public record GraphCodeElement(
     String id,
@@ -24,6 +26,8 @@ public record GraphCodeElement(
     int startLine,
     int endLine,
     String sourceCode,
-    String documentation
+    String documentation,
+    String chineseSummary,
+    String englishSummary
 ) {
 }

@@ -41,7 +41,9 @@ public final class CodeElementMapper {
             proto.getRelationsList().stream()
                 .map(CodeElementMapper::toDomain)
                 .toList(),
-            Map.copyOf(proto.getMetadataMap())
+            Map.copyOf(proto.getMetadataMap()),
+            null,
+            null
         );
     }
 

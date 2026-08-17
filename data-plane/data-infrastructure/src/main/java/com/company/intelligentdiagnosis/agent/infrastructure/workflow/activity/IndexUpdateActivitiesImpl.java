@@ -2,6 +2,7 @@ package com.company.intelligentdiagnosis.agent.infrastructure.workflow.activity;
 
 import com.company.intelligentdiagnosis.agent.infrastructure.snapshot.SnapshotApplicationService;
 import com.company.intelligentdiagnosis.agent.domain.CodeElement;
+import com.company.intelligentdiagnosis.agent.domain.enrichment.CodeElementEnricher;
 import com.company.intelligentdiagnosis.agent.domain.snapshot.IndexSnapshot;
 import com.company.intelligentdiagnosis.agent.domain.snapshot.SnapshotStatus;
 import com.company.intelligentdiagnosis.agent.domain.workflow.GitPushEvent;
@@ -28,15 +29,18 @@ public class IndexUpdateActivitiesImpl implements IndexUpdateActivities {
     private final SnapshotApplicationService snapshotApplicationService;
     private final SecurityScanner securityScanner;
     private final SecurityScanProperties securityScanProperties;
+    private final CodeElementEnricher enricher;
 
     public IndexUpdateActivitiesImpl(ParseWorkerClient parseWorkerClient,
                                      SnapshotApplicationService snapshotApplicationService,
                                      SecurityScanner securityScanner,
-                                     SecurityScanProperties securityScanProperties) {
+                                     SecurityScanProperties securityScanProperties,
+                                     CodeElementEnricher enricher) {
         this.parseWorkerClient = parseWorkerClient;
         this.snapshotApplicationService = snapshotApplicationService;
         this.securityScanner = securityScanner;
         this.securityScanProperties = securityScanProperties;
+        this.enricher = enricher;
     }
 
     @Override
@@ -121,8 +125,9 @@ public class IndexUpdateActivitiesImpl implements IndexUpdateActivities {
     @Override
     public void writeTempIndex(GitPushEvent event, List<CodeElement> elements, String snapshotId) {
         log.info("Writing {} elements to temporary index for repository {}", elements.size(), event.repositoryName());
-        List<String> elementIds = elements.stream().map(CodeElement::id).collect(Collectors.toList());
-        snapshotApplicationService.recordSandboxIndex(event, snapshotId, elements, elementIds);
+        List<CodeElement> enriched = enricher.enrich(elements);
+        List<String> elementIds = enriched.stream().map(CodeElement::id).collect(Collectors.toList());
+        snapshotApplicationService.recordSandboxIndex(event, snapshotId, enriched, elementIds);
     }
 
     @Override

@@ -2,6 +2,7 @@ package com.company.intelligentdiagnosis.agent.boot;
 
 import com.company.intelligentdiagnosis.agent.infrastructure.backup.BackupStorageProperties;
 import com.company.intelligentdiagnosis.agent.infrastructure.diagnosis.DiagnosisProperties;
+import com.company.intelligentdiagnosis.agent.infrastructure.enrichment.EnrichmentProperties;
 import com.company.intelligentdiagnosis.agent.infrastructure.llm.LlmProperties;
 import com.company.intelligentdiagnosis.agent.infrastructure.parse.ParseWorkerProperties;
 import com.company.intelligentdiagnosis.agent.infrastructure.security.SecurityScanProperties;
@@ -26,7 +27,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
     EmbeddingProperties.class,
     DiagnosisProperties.class,
     BackupStorageProperties.class,
-    SecurityScanProperties.class
+    SecurityScanProperties.class,
+    EnrichmentProperties.class
 })
 @EnableScheduling
 public class DataPlaneApplication {

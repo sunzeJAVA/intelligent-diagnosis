@@ -110,6 +110,11 @@ snapshot:
   backup:
     cron: ${SNAPSHOT_BACKUP_CRON:0 0 */6 * * *}
 
+enrichment:
+  enabled: true
+  batch-size: 1
+  timeout-seconds: 60
+
 llm:
   # Backward-compatible single-model configuration. Used when `models` is empty.
   provider: ${LLM_PROVIDER:openai}

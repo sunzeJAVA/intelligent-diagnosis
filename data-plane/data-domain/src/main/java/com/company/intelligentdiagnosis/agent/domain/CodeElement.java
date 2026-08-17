@@ -15,10 +15,12 @@ import java.util.Map;
  * @param startLine     起始行号
  * @param endLine       结束行号
  * @param sourceCode    源代码内容
- * @param documentation 文档注释
- * @param modifiers     修饰符列表（如 public、static）
- * @param relations     与其他元素的关系列表
- * @param metadata      元数据（语言特定的额外信息）
+ * @param documentation   文档注释
+ * @param modifiers       修饰符列表（如 public、static）
+ * @param relations       与其他元素的关系列表
+ * @param metadata        元数据（语言特定的额外信息）
+ * @param chineseSummary  中文摘要（索引阶段由 LLM 生成）
+ * @param englishSummary  英文摘要（索引阶段由 LLM 生成）
  */
 public record CodeElement(
     String id,
@@ -32,7 +34,9 @@ public record CodeElement(
     String documentation,
     List<String> modifiers,
     List<Relation> relations,
-    Map<String, String> metadata
+    Map<String, String> metadata,
+    String chineseSummary,
+    String englishSummary
 ) {
 
     /**
@@ -44,7 +48,23 @@ public record CodeElement(
     public CodeElement withRelations(List<Relation> newRelations) {
         return new CodeElement(
             id, kind, name, qualifiedName, filePath, startLine, endLine,
-            sourceCode, documentation, modifiers, newRelations, metadata
+            sourceCode, documentation, modifiers, newRelations, metadata,
+            chineseSummary, englishSummary
+        );
+    }
+
+    /**
+     * 创建一个新的 CodeElement，替换中英文摘要
+     *
+     * @param newChineseSummary 新的中文摘要
+     * @param newEnglishSummary 新的英文摘要
+     * @return 新的 CodeElement 实例
+     */
+    public CodeElement withSummaries(String newChineseSummary, String newEnglishSummary) {
+        return new CodeElement(
+            id, kind, name, qualifiedName, filePath, startLine, endLine,
+            sourceCode, documentation, modifiers, relations, metadata,
+            newChineseSummary, newEnglishSummary
         );
     }
 }

@@ -82,6 +82,8 @@ public class GraphStoreClient {
                         e.endLine = node.endLine,
                         e.sourceCode = node.sourceCode,
                         e.documentation = node.documentation,
+                        e.chineseSummary = node.chineseSummary,
+                        e.englishSummary = node.englishSummary,
                         e.modifiers = node.modifiers
                     """.formatted(nodeLabel), Values.parameters("nodes", nodeParams));
 
@@ -346,7 +348,9 @@ public class GraphStoreClient {
             intValue(node.get("startLine")),
             intValue(node.get("endLine")),
             stringValue(node.get("sourceCode")),
-            stringValue(node.get("documentation"))
+            stringValue(node.get("documentation")),
+            stringValue(node.get("chineseSummary")),
+            stringValue(node.get("englishSummary"))
         );
     }
 
@@ -389,6 +393,8 @@ public class GraphStoreClient {
             Map.entry("endLine", element.endLine()),
             Map.entry("sourceCode", nullToEmpty(element.sourceCode())),
             Map.entry("documentation", nullToEmpty(element.documentation())),
+            Map.entry("chineseSummary", nullToEmpty(element.chineseSummary())),
+            Map.entry("englishSummary", nullToEmpty(element.englishSummary())),
             Map.entry("modifiers", element.modifiers() != null ? element.modifiers() : List.of())
         );
     }

@@ -64,7 +64,9 @@ class GraphStoreClientTest {
             "",
             List.of("public"),
             List.of(new Relation(RelationKind.CONTAINS, "repo/src/Main.java#Main#main")),
-            Map.of()
+            Map.of(),
+            "主类",
+            "Main class"
         );
 
         graphStoreClient.buildGraph("repo", "abc123", List.of(parent));

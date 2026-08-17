@@ -43,10 +43,12 @@ class GraphCodeRetrieverTest {
 
         GraphCodeElement controllerNode = new GraphCodeElement(
             "controller-id", "METHOD", "getUserDetail", "UserController.getUserDetail",
-            "UserController.java", 10, 20, "public void getUserDetail() {}", "");
+            "UserController.java", 10, 20, "public void getUserDetail() {}", "",
+            "获取用户详情", "Get user detail");
         GraphCodeElement serviceNode = new GraphCodeElement(
             "service-id", "METHOD", "getUserById", "UserService.getUserById",
-            "UserService.java", 30, 40, "public User getUserById() {}", "");
+            "UserService.java", 30, 40, "public User getUserById() {}", "",
+            "根据 ID 获取用户", "Get user by id");
 
         when(graphStoreClient.findNodesByName(eq("svc"), anyString())).thenReturn(List.of(controllerNode));
         when(graphStoreClient.expandCallChain("svc", "controller-id", 2))
@@ -67,7 +69,8 @@ class GraphCodeRetrieverTest {
 
         GraphCodeElement node = new GraphCodeElement(
             "order-id", "METHOD", "processOrder", "OrderService.processOrder",
-            "OrderService.java", 5, 15, "public void processOrder() {}", "");
+            "OrderService.java", 5, 15, "public void processOrder() {}", "",
+            "处理订单", "Process order");
 
         when(graphStoreClient.findNodesByName("svc", "OrderService")).thenReturn(List.of(node));
         when(graphStoreClient.expandCallChain("svc", "order-id", 2)).thenReturn(List.of(node));

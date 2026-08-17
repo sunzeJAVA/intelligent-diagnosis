@@ -128,7 +128,9 @@ class VectorStoreClientTest {
             "",
             List.of(),
             List.of(),
-            java.util.Map.of()
+            java.util.Map.of(),
+            "主类",
+            "Main class"
         );
     }
 

@@ -275,21 +275,24 @@ public class VectorStoreClient {
         String text = buildEmbeddingText(element);
         float[] vector = embeddingGenerator.embed(text);
 
+        Map<String, io.qdrant.client.grpc.JsonWithInt.Value> payload = new java.util.HashMap<>();
+        payload.put("repository", value(repository));
+        payload.put("kind", value(element.kind().name()));
+        payload.put("name", value(element.name()));
+        payload.put("qualifiedName", value(nullToEmpty(element.qualifiedName())));
+        payload.put("filePath", value(nullToEmpty(element.filePath())));
+        payload.put("startLine", value(element.startLine()));
+        payload.put("endLine", value(element.endLine()));
+        payload.put("sourceCode", value(nullToEmpty(element.sourceCode())));
+        payload.put("documentation", value(nullToEmpty(element.documentation())));
+        payload.put("chineseSummary", value(nullToEmpty(element.chineseSummary())));
+        payload.put("englishSummary", value(nullToEmpty(element.englishSummary())));
+        payload.put("text", value(text));
+
         return Points.PointStruct.newBuilder()
             .setId(id(pointIdFor(element.id())))
             .setVectors(vectors(vector))
-            .putAllPayload(Map.of(
-                "repository", value(repository),
-                "kind", value(element.kind().name()),
-                "name", value(element.name()),
-                "qualifiedName", value(nullToEmpty(element.qualifiedName())),
-                "filePath", value(nullToEmpty(element.filePath())),
-                "startLine", value(element.startLine()),
-                "endLine", value(element.endLine()),
-                "sourceCode", value(nullToEmpty(element.sourceCode())),
-                "documentation", value(nullToEmpty(element.documentation())),
-                "text", value(text)
-            ))
+            .putAllPayload(payload)
             .build();
     }
 

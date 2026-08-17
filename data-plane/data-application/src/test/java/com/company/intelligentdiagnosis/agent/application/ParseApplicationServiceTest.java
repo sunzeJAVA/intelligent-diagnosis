@@ -2,6 +2,7 @@ package com.company.intelligentdiagnosis.agent.application;
 
 import com.company.intelligentdiagnosis.agent.domain.CodeElement;
 import com.company.intelligentdiagnosis.agent.domain.ElementKind;
+import com.company.intelligentdiagnosis.agent.domain.enrichment.CodeElementEnricher;
 import com.company.intelligentdiagnosis.agent.domain.parse.ParseCommand;
 import com.company.intelligentdiagnosis.agent.infrastructure.graph.GraphStoreClient;
 import com.company.intelligentdiagnosis.agent.infrastructure.parse.ParseWorkerClient;
@@ -31,6 +32,9 @@ class ParseApplicationServiceTest {
     @Mock
     private GraphStoreClient graphStoreClient;
 
+    @Mock
+    private CodeElementEnricher enricher;
+
     @InjectMocks
     private ParseApplicationService parseApplicationService;
 
@@ -55,16 +59,21 @@ class ParseApplicationServiceTest {
             "",
             List.of(),
             List.of(),
-            java.util.Map.of()
+            java.util.Map.of(),
+            null,
+            null
         );
+        CodeElement enriched = element.withSummaries("主类", "Main class");
         when(parseWorkerClient.parse("java", buildExpectedRequest(command)))
             .thenReturn(List.of(element));
+        when(enricher.enrich(List.of(element))).thenReturn(List.of(enriched));
 
         List<CodeElement> result = parseApplicationService.parseAndIndex(command);
 
-        assertThat(result).containsExactly(element);
-        verify(vectorStoreClient).upsert("repo", List.of(element));
-        verify(graphStoreClient).buildGraph("repo", "abc123", List.of(element));
+        assertThat(result).containsExactly(enriched);
+        verify(enricher).enrich(List.of(element));
+        verify(vectorStoreClient).upsert("repo", List.of(enriched));
+        verify(graphStoreClient).buildGraph("repo", "abc123", List.of(enriched));
     }
 
     private ParseRequest buildExpectedRequest(ParseCommand command) {

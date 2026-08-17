@@ -70,7 +70,9 @@ public class ParseController {
             element.modifiers(),
             element.relations().stream()
                 .map(r -> new RelationDto(r.kind().name(), r.targetId()))
-                .toList()
+                .toList(),
+            element.chineseSummary(),
+            element.englishSummary()
         );
     }
 
@@ -94,7 +96,9 @@ public class ParseController {
         String sourceCode,
         String documentation,
         List<String> modifiers,
-        List<RelationDto> relations
+        List<RelationDto> relations,
+        String chineseSummary,
+        String englishSummary
     ) {
     }
 

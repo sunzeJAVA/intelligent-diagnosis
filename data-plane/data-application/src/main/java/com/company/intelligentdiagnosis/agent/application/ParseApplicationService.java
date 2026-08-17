@@ -1,6 +1,7 @@
 package com.company.intelligentdiagnosis.agent.application;
 
 import com.company.intelligentdiagnosis.agent.domain.CodeElement;
+import com.company.intelligentdiagnosis.agent.domain.enrichment.CodeElementEnricher;
 import com.company.intelligentdiagnosis.agent.domain.parse.ParseCommand;
 import com.company.intelligentdiagnosis.agent.infrastructure.graph.GraphStoreClient;
 import com.company.intelligentdiagnosis.agent.infrastructure.parse.ParseWorkerClient;
@@ -20,6 +21,7 @@ public class ParseApplicationService {
     private final ParseWorkerClient parseWorkerClient;
     private final VectorStoreClient vectorStoreClient;
     private final GraphStoreClient graphStoreClient;
+    private final CodeElementEnricher enricher;
 
     /**
      * 构造函数
@@ -27,13 +29,16 @@ public class ParseApplicationService {
      * @param parseWorkerClient 解析工作器客户端
      * @param vectorStoreClient 向量存储客户端
      * @param graphStoreClient  图存储客户端
+     * @param enricher          代码元素富化器
      */
     public ParseApplicationService(ParseWorkerClient parseWorkerClient,
                                    VectorStoreClient vectorStoreClient,
-                                   GraphStoreClient graphStoreClient) {
+                                   GraphStoreClient graphStoreClient,
+                                   CodeElementEnricher enricher) {
         this.parseWorkerClient = parseWorkerClient;
         this.vectorStoreClient = vectorStoreClient;
         this.graphStoreClient = graphStoreClient;
+        this.enricher = enricher;
     }
 
     /**
@@ -52,10 +57,11 @@ public class ParseApplicationService {
             .build();
 
         List<CodeElement> elements = parseWorkerClient.parse(command.language(), request);
+        List<CodeElement> enriched = enricher.enrich(elements);
 
-        vectorStoreClient.upsert(command.repository(), elements);
-        graphStoreClient.buildGraph(command.repository(), command.commitHash(), elements);
+        vectorStoreClient.upsert(command.repository(), enriched);
+        graphStoreClient.buildGraph(command.repository(), command.commitHash(), enriched);
 
-        return elements;
+        return enriched;
     }
 }
